@@ -1,11 +1,11 @@
 /* eslint-disable */
 
 function getGlobalImports() {
-  return (
-    config.globalImports ?? [
-      "import prisma from 'TODO: specify globalImports in airent config';",
-    ]
-  );
+  const globalImports = config.globalImports ?? [
+    "import prisma from 'TODO: specify globalImports in airent config';",
+  ];
+  globalImports.push("import { batchLoad } from 'airext';");
+  return globalImports;
 }
 
 function isLoaderGeneratable(field) {
@@ -27,5 +27,5 @@ function getTargetLoadedModels(field) {
     (tkn, i) => `${tkn}: { in: ${sourceKeyArrays[i]} }`
   );
   const where = `where: { ${conditions.join(", ")} }`;
-  return `await prisma.${prismaName}.findMany({ ${where} })`;
+  return `await batchLoad(prisma.${prismaName}.findMany, { ${where} })`;
 }

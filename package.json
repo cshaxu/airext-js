@@ -2,21 +2,36 @@
   "name": "airext",
   "version": "0.1.2",
   "description": "Airent Extension",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf ./lib && tsc -p tsconfig.json"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cshaxu/airext-js.git"
   },
   "keywords": [
-    "airent"
+    "api",
+    "backend",
+    "data",
+    "entity",
+    "framework",
+    "orm",
+    "pojo",
+    "presentation"
   ],
   "author": "cshaxu",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/cshaxu/airext-js/issues"
   },
-  "homepage": "https://github.com/cshaxu/airext-js#readme"
+  "homepage": "https://github.com/cshaxu/airext-js#readme",
+  "files": [
+    "lib",
+    "templates"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.8.4",
+    "typescript": "^5.2.2"
+  }
 }
