@@ -1,0 +1,22 @@
+{
+  "name": "airext",
+  "version": "0.1.2",
+  "description": "Airent Extension",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cshaxu/airext.git"
+  },
+  "keywords": [
+    "airent"
+  ],
+  "author": "cshaxu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cshaxu/airext/issues"
+  },
+  "homepage": "https://github.com/cshaxu/airext#readme"
+}
