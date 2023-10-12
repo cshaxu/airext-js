@@ -13,13 +13,13 @@ function isLoaderGeneratable(field) {
 }
 
 function getTargetLoadedModels(field) {
-  if (!hasSourceKey(field)) {
+  if (!isEntityTypeField(field) || !hasSourceKey(field)) {
     return "[/* TODO: load associated models here */]";
   } else if (!hasTargetKey(field)) {
     return "[/* TODO: load associated models with the above keys */]";
   }
 
-  const prismaName = toCamelCase(getOtherEntityStrings(field).entName);
+  const prismaName = toCamelCase(toPrimitiveTypeName(field.type));
 
   const sourceKeyArrays = getSourceFields(field).map((sf) => `${sf.name}s`);
   const targetKeyNames = field.targetFields;
