@@ -1,49 +1,49 @@
-<% if (!internal) { -%>
+<% if (!schema.internal) { -%>
 import {
   <%= getThisEntityStrings().fieldRequestClass %>,
   <%= getThisEntityStrings().responseClass %>,
 } from './<%= getThisEntityStrings().typePackage %>';
 import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
 
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
 export type <%= `Many${getThisEntityStrings().entName}sCursor` %> = {
   count: number;
-<% fields.filter(isCursorField).forEach((field) => { -%>
-  <% if (field.deprecated) { -%>
+<% schema.fields.filter(isCursorField).forEach((field) => { -%>
+  <%_ if (field.deprecated) { -%>
   /** @deprecated */
-  <% } -%>
+  <%_ } -%>
   min<%= toTitleCase(field.name) %>?: <%= getFieldStrings(field).fieldResponseType %>;
-  <% if (field.deprecated) { -%>
+  <%_ if (field.deprecated) { -%>
   /** @deprecated */
-  <% } -%>
+  <%_ } -%>
   max<%= toTitleCase(field.name) %>?: <%= getFieldStrings(field).fieldResponseType %>;
 <% }); -%>
 };
 
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
 export type <%= `Many${getThisEntityStrings().entName}sResponse` %> = {
   cursor: <%= `Many${getThisEntityStrings().entName}sCursor` %>;
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
   /** @deprecated */
 <% } -%>
   <%= toCamelCase(getThisEntityStrings().entName) %>s: <%= getThisEntityStrings().responseClass %>[];
 };
 
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
 export type <%= `One${getThisEntityStrings().entName}Response` %> = {
-  <% if (deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-  <% } -%>
+  <%_ } -%>
   <%= toCamelCase(getThisEntityStrings().entName) %>: <%= getThisEntityStrings().responseClass %>;
 };
 
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
 export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
@@ -52,7 +52,7 @@ export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
 ): Promise<<%= `Many${getThisEntityStrings().entName}sResponse` %>> {
   const <%= toCamelCase(getThisEntityStrings().entName) %>s =
     await <%= getThisEntityStrings().entityClass %>.presentMany(many, fieldRequest);
-<% fields.filter(isCursorField).forEach((field) => { -%>
+<% schema.fields.filter(isCursorField).forEach((field) => { -%>
   const min<%= toTitleCase(field.name) %> = many.reduce((acc, one) => {
     const value = one.<%= field.name %>;
     if (acc === undefined || acc > value) {
@@ -70,7 +70,7 @@ export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
 <% }); -%>
   const cursor = {
     count: many.length,
-<% fields.filter(isCursorField).forEach((field) => { -%>
+<% schema.fields.filter(isCursorField).forEach((field) => { -%>
     min<%= toTitleCase(field.name) %>,
     max<%= toTitleCase(field.name) %>,
 <% }); -%>
@@ -78,7 +78,7 @@ export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
   return { cursor, <%= toCamelCase(getThisEntityStrings().entName) %>s };
 }
 
-<% if (deprecated) { -%>
+<% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
 export async function buildOne<%= getThisEntityStrings().entName %>Response(
