@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cshaxu/airext.git"
+    "url": "git+https://github.com/cshaxu/airext-js.git"
   },
   "keywords": [
     "airent"
@@ -16,7 +16,7 @@
   "author": "cshaxu",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cshaxu/airext/issues"
+    "url": "https://github.com/cshaxu/airext-js/issues"
   },
-  "homepage": "https://github.com/cshaxu/airext#readme"
+  "homepage": "https://github.com/cshaxu/airext-js#readme"
 }
