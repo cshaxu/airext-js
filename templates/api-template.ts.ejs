@@ -8,7 +8,7 @@ import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityS
 <% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
-export type <%= `Many${getThisEntityStrings().entName}sCursor` %> = {
+export type <%= `Many${pluralize(getThisEntityStrings().entName)}Cursor` %> = {
   count: number;
 <% schema.fields.filter(isCursorField).forEach((field) => { -%>
   <%_ if (field.deprecated) { -%>
@@ -25,12 +25,12 @@ export type <%= `Many${getThisEntityStrings().entName}sCursor` %> = {
 <% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
-export type <%= `Many${getThisEntityStrings().entName}sResponse` %> = {
-  cursor: <%= `Many${getThisEntityStrings().entName}sCursor` %>;
+export type <%= `Many${pluralize(getThisEntityStrings().entName)}Response` %> = {
+  cursor: <%= `Many${pluralize(getThisEntityStrings().entName)}Cursor` %>;
 <% if (schema.deprecated) { -%>
   /** @deprecated */
 <% } -%>
-  <%= toCamelCase(getThisEntityStrings().entName) %>s: <%= getThisEntityStrings().responseClass %>[];
+  <%= pluralize(toCamelCase(getThisEntityStrings().entName)) %>: <%= getThisEntityStrings().responseClass %>[];
 };
 
 <% if (schema.deprecated) { -%>
@@ -46,11 +46,11 @@ export type <%= `One${getThisEntityStrings().entName}Response` %> = {
 <% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
-export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
+export async function buildMany<%= pluralize(getThisEntityStrings().entName) %>Response(
   many: <%= getThisEntityStrings().entityClass %>[],
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %> | boolean,
-): Promise<<%= `Many${getThisEntityStrings().entName}sResponse` %>> {
-  const <%= toCamelCase(getThisEntityStrings().entName) %>s =
+): Promise<<%= `Many${pluralize(getThisEntityStrings().entName)}Response` %>> {
+  const <%= pluralize(toCamelCase(getThisEntityStrings().entName)) %> =
     await <%= getThisEntityStrings().entityClass %>.presentMany(many, fieldRequest);
 <% schema.fields.filter(isCursorField).forEach((field) => { -%>
   const min<%= toTitleCase(field.name) %> = many.reduce((acc, one) => {
@@ -75,7 +75,7 @@ export async function buildMany<%= getThisEntityStrings().entName %>sResponse(
     max<%= toTitleCase(field.name) %>,
 <% }); -%>
   };
-  return { cursor, <%= toCamelCase(getThisEntityStrings().entName) %>s };
+  return { cursor, <%= pluralize(toCamelCase(getThisEntityStrings().entName)) %> };
 }
 
 <% if (schema.deprecated) { -%>
