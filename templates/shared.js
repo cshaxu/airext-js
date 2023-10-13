@@ -31,7 +31,6 @@ function pluralize(word) {
 
   // Check if the word matches any of the rules and apply the first matching rule
   for (const [pattern, replacement] of pluralRules) {
-    console.log("replacement" + pattern.test(word));
     if (pattern.test(word)) {
       return word.replace(pattern, replacement);
     }
