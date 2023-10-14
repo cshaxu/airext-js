@@ -172,7 +172,7 @@ export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getOneEntityVarName() %> = await service.deleteOne(params, body);
+  const <%= getOneEntityVarName() %> = await service.deleteOne(params);
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
