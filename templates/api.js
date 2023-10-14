@@ -1,5 +1,11 @@
 /* eslint-disable */
 
+function getApiPackageName() {
+  const prefix = toKababCase(entityName);
+  const suffix = getModuleSuffix();
+  return `${prefix}-api${suffix}`;
+}
+
 function isCursorField(field) {
   return !!field.cursor && isExternalField(field);
 }

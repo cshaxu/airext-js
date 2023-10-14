@@ -1,0 +1,59 @@
+<% if (schema.service) { -%>
+import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
+<% if (hasGetOne()) { -%>
+import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
+<% } -%>
+<% if (hasGetMany()) { -%>
+import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
+<% } -%>
+<% if (hasCreateOne()) { -%>
+import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
+<% } -%>
+<% if (hasUpdateOne()) { -%>
+import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
+<% } -%>
+<% if (hasDeleteOne()) { -%>
+import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
+<% } -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+export abstract class <%= `${getServiceName()}Base` %> {
+  <%_ if (schema.service.fields?.length) { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  protected <%= field.name %>: <%= field.type %>;
+    <%_ }); -%>
+
+  public constructor(
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%= field.name %>: <%= field.type %>,
+    <%_ }); -%>
+  ) {
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    this.<%= field.name %> = <%= field.name %>;
+    <%_ }); -%>
+  }
+  <%_ } -%>
+  <%_ if (hasGetMany()) { -%>
+
+  public abstract getMany(params: GetManyPostsQuery): Promise<<%= getThisEntityStrings().entityClass %>[]>;
+  <%_ } -%>
+  <%_ if (hasGetOne()) { -%>
+
+  public abstract getOne(params: GetOnePostParams): Promise<<%= getThisEntityStrings().entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasCreateOne()) { -%>
+
+  public abstract createOne(body: CreateOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasUpdateOne()) { -%>
+
+  public abstract updateOne(params: GetOnePostParams, body: UpdateOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasDeleteOne()) { -%>
+
+  public abstract deleteOne(params: GetOnePostParams, body: DeleteOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  <%_ } -%>
+}
+<% } -%>

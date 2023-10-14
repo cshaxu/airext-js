@@ -71,49 +71,6 @@ export type <%= getOneResponseName() %> = {
   <%_ } -%>
   <%= getOneEntityVarName() %>: <%= getThisEntityStrings().responseClass %>;
 };
-<% if (schema.service) { -%>
-
-  <%_ if (schema.deprecated) { -%>
-/** @deprecated */
-  <%_ } -%>
-export abstract class <%= `${getServiceName()}Base` %> {
-  <%_ if (schema.service.fields?.length) { -%>
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
-  protected <%= field.name %>: <%= field.type %>;
-    <%_ }); -%>
-
-  public constructor(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
-    <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
-  ) {
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
-    this.<%= field.name %> = <%= field.name %>;
-    <%_ }); -%>
-  }
-  <%_ } -%>
-  <%_ if (hasGetMany()) { -%>
-
-  public abstract getMany(params: GetManyPostsQuery): Promise<PostEntity[]>;
-  <%_ } -%>
-  <%_ if (hasGetOne()) { -%>
-
-  public abstract getOne(params: GetOnePostParams): Promise<PostEntity>;
-  <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
-
-  public abstract createOne(body: CreateOnePostBody): Promise<PostEntity>;
-  <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
-
-  public abstract updateOne(params: GetOnePostParams, body: UpdateOnePostBody): Promise<PostEntity>;
-  <%_ } -%>
-  <%_ if (hasDeleteOne()) { -%>
-
-  public abstract deleteOne(params: GetOnePostParams, body: DeleteOnePostBody): Promise<PostEntity>;
-  <%_ } -%>
-}
-<% } -%>
 <% if (hasGetMany()) { -%>
 
   <%_ if (schema.deprecated) { -%>
