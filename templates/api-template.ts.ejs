@@ -13,13 +13,13 @@ import { <%= field.type %> } from '<%= field.import %>';
   <%_ if (hasGetMany() && !schema.methods.getMany.internal) { -%>
 import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
   <%_ } -%>
-  <%_ if (hasCreateOne() && !schema.methods.createOne.internal) { -%>
+  <%_ if (hasCreateOne() && !schema.methods.create.internal) { -%>
 import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
   <%_ } -%>
-  <%_ if (hasUpdateOne() && !schema.methods.updateOne.internal) { -%>
+  <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
   <%_ } -%>
-  <%_ if (hasDeleteOne() && !schema.methods.deleteOne.internal) { -%>
+  <%_ if (hasDeleteOne() && !schema.methods.delete.internal) { -%>
 import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
   <%_ } -%>
 <% } -%>
@@ -115,7 +115,7 @@ export async function <%= `getOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasCreateOne() && !schema.methods.createOne.internal) { -%>
+  <%_ if (hasCreateOne() && !schema.methods.create.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -136,7 +136,7 @@ export async function <%= `createOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasUpdateOne() && !schema.methods.updateOne.internal) { -%>
+  <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -158,7 +158,7 @@ export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasDeleteOne() && !schema.methods.deleteOne.internal) { -%>
+  <%_ if (hasDeleteOne() && !schema.methods.delete.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
