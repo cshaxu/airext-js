@@ -10,16 +10,16 @@ import { <%= getServiceName() %> } from '<%= schema.service.import %>';
 import { <%= field.type %> } from '<%= field.import %>';
     <%_ }); -%>
   <%_ } -%>
-  <%_ if (hasGetMany()) { -%>
+  <%_ if (hasGetMany() && !schema.methods.getMany.internal) { -%>
 import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
   <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
+  <%_ if (hasCreateOne() && !schema.methods.createOne.internal) { -%>
 import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
   <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
+  <%_ if (hasUpdateOne() && !schema.methods.updateOne.internal) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
   <%_ } -%>
-  <%_ if (hasDeleteOne()) { -%>
+  <%_ if (hasDeleteOne() && !schema.methods.deleteOne.internal) { -%>
 import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
   <%_ } -%>
 <% } -%>
@@ -73,7 +73,7 @@ export type <%= getOneResponseName() %> = {
   <%_ } -%>
   <%= getOneEntityVarName() %>: <%= getThisEntityStrings().responseClass %>;
 };
-  <%_ if (hasGetMany()) { -%>
+  <%_ if (hasGetMany() && !schema.methods.getMany.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -94,7 +94,7 @@ export async function <%= `getMany${getPluralEntityName()}` %>(
   return await <%= `build${getManyResponseName()}` %>(<%= getManyEntitiesVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasGetOne()) { -%>
+  <%_ if (hasGetOne() && !schema.methods.getOne.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -115,7 +115,7 @@ export async function <%= `getOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
+  <%_ if (hasCreateOne() && !schema.methods.createOne.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -136,7 +136,7 @@ export async function <%= `createOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
+  <%_ if (hasUpdateOne() && !schema.methods.updateOne.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -158,7 +158,7 @@ export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
   <%_ } -%>
-  <%_ if (hasDeleteOne()) { -%>
+  <%_ if (hasDeleteOne() && !schema.methods.deleteOne.internal) { -%>
 
     <%_ if (schema.deprecated) { -%>
 /** @deprecated */
