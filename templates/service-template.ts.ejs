@@ -1,5 +1,7 @@
-<% if (schema.service) { -%>
 import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
+<%_ (schema.service?.fields ?? []).filter((field) => field.import?.length).forEach((field) => { -%>
+import { <%= field.type %> } from '<%= field.import %>';
+<%_ }); -%>
 <% if (hasGetOne()) { -%>
 import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
 <% } -%>
@@ -20,7 +22,7 @@ import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import 
 /** @deprecated */
   <%_ } -%>
 export abstract class <%= `${getServiceName()}Base` %> {
-  <%_ if (schema.service.fields?.length) { -%>
+  <%_ if (schema.service?.fields?.length) { -%>
     <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   protected <%= field.name %>: <%= field.type %>;
     <%_ }); -%>
@@ -56,4 +58,3 @@ export abstract class <%= `${getServiceName()}Base` %> {
   public abstract deleteOne(params: GetOnePostParams, body: DeleteOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
 }
-<% } -%>

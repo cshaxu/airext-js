@@ -4,23 +4,24 @@ import {
   <%= getThisEntityStrings().responseClass %>,
 } from './<%= getThisEntityStrings().typePackage %>';
 import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
-<% if (schema.service) { -%>
+  <%_ if (schema.service) { -%>
 import { <%= getServiceName() %> } from '<%= schema.service.import %>';
-  <%_ (schema.service.fields ?? []).filter((field) => field.import?.length).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).filter((field) => field.import?.length).forEach((field) => { -%>
 import { <%= field.type %> } from '<%= field.import %>';
-  <%_ }); -%>
-<% } -%>
-<% if (hasGetMany()) { -%>
+    <%_ }); -%>
+  <%_ } -%>
+  <%_ if (hasGetMany()) { -%>
 import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
-<% } -%>
-<% if (hasCreateOne()) { -%>
+  <%_ } -%>
+  <%_ if (hasCreateOne()) { -%>
 import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
-<% } -%>
-<% if (hasUpdateOne()) { -%>
+  <%_ } -%>
+  <%_ if (hasUpdateOne()) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
-<% } -%>
-<% if (hasDeleteOne()) { -%>
+  <%_ } -%>
+  <%_ if (hasDeleteOne()) { -%>
 import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
+  <%_ } -%>
 <% } -%>
 <% if (hasGetOne()) { -%>
 
@@ -33,161 +34,162 @@ export type <%= getGetOneParamsName() %> = {
   <%_ }); -%>
 };
 <% } -%>
+<% if (!schema.internal) { -%>
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 export type <%= getCursorName() %> = {
   count: number;
-<% schema.fields.filter(isCursorField).forEach((field) => { -%>
-  <%_ if (field.deprecated) { -%>
+  <%_ schema.fields.filter(isCursorField).forEach((field) => { -%>
+    <%_ if (field.deprecated) { -%>
   /** @deprecated */
-  <%_ } -%>
-  <%= `min${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
-  <%_ if (field.deprecated) { -%>
+    <%_ } -%>
+    <%= `min${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+    <%_ if (field.deprecated) { -%>
   /** @deprecated */
-  <%_ } -%>
-  <%= `max${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
-<% }); -%>
+    <%_ } -%>
+    <%= `max${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+  <%_ }); -%>
 };
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 export type <%= getManyResponseName() %> = {
   cursor: <%= getCursorName() %>;
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-<% } -%>
+  <%_ } -%>
   <%= getManyEntitiesVarName() %>: <%= getThisEntityStrings().responseClass %>[];
 };
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 export type <%= getOneResponseName() %> = {
   <%_ if (schema.deprecated) { -%>
   /** @deprecated */
   <%_ } -%>
   <%= getOneEntityVarName() %>: <%= getThisEntityStrings().responseClass %>;
 };
-<% if (hasGetMany()) { -%>
+  <%_ if (hasGetMany()) { -%>
 
-  <%_ if (schema.deprecated) { -%>
+    <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-  <%_ } -%>
+    <%_ } -%>
 export async function <%= `getMany${getPluralEntityName()}` %>(
   query: <%= getGetManyQueryName() %>,
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-  <%_ }); -%>
+    <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getManyResponseName() %>> {
   const service = new <%= getServiceName() %>(
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-  <%_ }); -%>
+    <%_ }); -%>
   );
   const <%= getManyEntitiesVarName() %> = await service.getMany(query);
   return await <%= `build${getManyResponseName()}` %>(<%= getManyEntitiesVarName() %>, fieldRequest);
 }
-<% } -%>
-<% if (hasGetOne()) { -%>
-
-  <%_ if (schema.deprecated) { -%>
-/** @deprecated */
   <%_ } -%>
+  <%_ if (hasGetOne()) { -%>
+
+    <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+    <%_ } -%>
 export async function <%= `getOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-  <%_ }); -%>
+    <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-  <%_ }); -%>
+    <%_ }); -%>
   );
   const <%= getOneEntityVarName() %> = await service.getOne(params);
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
-<% } -%>
-<% if (hasCreateOne()) { -%>
-
-  <%_ if (schema.deprecated) { -%>
-/** @deprecated */
   <%_ } -%>
+  <%_ if (hasCreateOne()) { -%>
+
+    <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+    <%_ } -%>
 export async function <%= `createOne${getThisEntityStrings().entName}` %>(
   body: <%= getCreateOneBodyName() %>,
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-  <%_ }); -%>
+    <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-  <%_ }); -%>
+    <%_ }); -%>
   );
   const <%= getOneEntityVarName() %> = await service.createOne(body);
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
-<% } -%>
-<% if (hasUpdateOne()) { -%>
-
-  <%_ if (schema.deprecated) { -%>
-/** @deprecated */
   <%_ } -%>
+  <%_ if (hasUpdateOne()) { -%>
+
+    <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+    <%_ } -%>
 export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
   body: <%= getUpdateOneBodyName() %>,
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-  <%_ }); -%>
+    <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-  <%_ }); -%>
+    <%_ }); -%>
   );
   const <%= getOneEntityVarName() %> = await service.updateOne(params, body);
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
-<% } -%>
-<% if (hasDeleteOne()) { -%>
-
-  <%_ if (schema.deprecated) { -%>
-/** @deprecated */
   <%_ } -%>
+  <%_ if (hasDeleteOne()) { -%>
+
+    <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+    <%_ } -%>
 export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
   body: <%= getDeleteOneBodyName() %>,
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-  <%_ }); -%>
+    <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-  <%_ }); -%>
+    <%_ }); -%>
   );
   const <%= getOneEntityVarName() %> = await service.deleteOne(params, body);
   return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
 }
-<% } -%>
+  <%_ } -%>
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 export async function <%= `build${getManyResponseName()}` %>(
   many: <%= getThisEntityStrings().entityClass %>[],
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %> | boolean,
 ): Promise<<%= getManyResponseName() %>> {
   const <%= getManyEntitiesVarName() %> = await <%= getThisEntityStrings().entityClass %>.presentMany(many, fieldRequest);
-<% schema.fields.filter(isCursorField).forEach((field) => { -%>
+  <%_ schema.fields.filter(isCursorField).forEach((field) => { -%>
   const <%= `min${toTitleCase(field.name)}` %> = many.reduce((acc, one) => {
     const value = one.<%= field.name %>;
     if (acc === undefined || acc > value) {
@@ -202,20 +204,20 @@ export async function <%= `build${getManyResponseName()}` %>(
     }
     return acc;
   }, undefined as <%= field.type %> | undefined);
-<% }); -%>
+  <%_ }); -%>
   const cursor = {
     count: many.length,
-<% schema.fields.filter(isCursorField).forEach((field) => { -%>
+  <%_ schema.fields.filter(isCursorField).forEach((field) => { -%>
     <%= `min${toTitleCase(field.name)}` %>,
     <%= `max${toTitleCase(field.name)}` %>,
-<% }); -%>
+  <%_ }); -%>
   };
   return { cursor, <%= getManyEntitiesVarName() %> };
 }
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 export async function <%= `build${getOneResponseName()}` %>(
   one: <%= getThisEntityStrings().entityClass %>,
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %> | boolean,
