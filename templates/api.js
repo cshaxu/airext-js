@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 function getApiPackageName() {
-  const prefix = toKababCase(entityName);
+  const prefix = toKababCase(getThisEntityStrings().entityClass);
   const suffix = getModuleSuffix();
   return `${prefix}-api${suffix}`;
 }
