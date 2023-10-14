@@ -14,9 +14,6 @@ import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import 
 <% if (hasUpdateOne()) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
 <% } -%>
-<% if (hasDeleteOne()) { -%>
-import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
-<% } -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -39,22 +36,22 @@ export abstract class <%= `${getServiceName()}Base` %> {
   <%_ } -%>
   <%_ if (hasGetMany()) { -%>
 
-  public abstract getMany(params: GetManyPostsQuery): Promise<<%= getThisEntityStrings().entityClass %>[]>;
+  public abstract getMany(params: <%= getGetManyQueryName() %>): Promise<<%= getThisEntityStrings().entityClass %>[]>;
   <%_ } -%>
   <%_ if (hasGetOne()) { -%>
 
-  public abstract getOne(params: GetOnePostParams): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasCreateOne()) { -%>
 
-  public abstract createOne(body: CreateOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasUpdateOne()) { -%>
 
-  public abstract updateOne(params: GetOnePostParams, body: UpdateOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract updateOne(params: <%= getGetOneParamsName() %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasDeleteOne()) { -%>
 
-  public abstract deleteOne(params: GetOnePostParams, body: DeleteOnePostBody): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
 }

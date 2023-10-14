@@ -19,9 +19,6 @@ import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import 
   <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
   <%_ } -%>
-  <%_ if (hasDeleteOne() && !schema.methods.delete.internal) { -%>
-import { <%= getDeleteOneBodyName() %> } from '<%= schema.methods.delete.import %>';
-  <%_ } -%>
 <% } -%>
 <% if (hasGetOne()) { -%>
 
@@ -165,7 +162,6 @@ export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
     <%_ } -%>
 export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
-  body: <%= getDeleteOneBodyName() %>,
     <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
     <%_ }); -%>

@@ -93,7 +93,3 @@ function getCreateOneBodyName() {
 function getUpdateOneBodyName() {
   return `UpdateOne${getThisEntityStrings().entName}Body`;
 }
-
-function getDeleteOneBodyName() {
-  return `DeleteOne${getThisEntityStrings().entName}Body`;
-}
