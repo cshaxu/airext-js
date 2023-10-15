@@ -88,8 +88,10 @@ export async function <%= `getMany${getPluralEntityName()}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getManyEntitiesVarName() %> = await service.getMany(query);
-  return await <%= `build${getManyResponseName()}` %>(<%= getManyEntitiesVarName() %>, fieldRequest);
+  await service.beforeGetMany(query);
+  const many = await service.getMany(query);
+  await service.afterGetMany(many, query);
+  return await <%= `build${getManyResponseName()}` %>(many, fieldRequest);
 }
   <%_ } -%>
   <%_ if (hasGetOne() && !schema.methods.getOne.internal) { -%>
@@ -109,8 +111,10 @@ export async function <%= `getOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getOneEntityVarName() %> = await service.getOne(params);
-  return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
+  await service.beforeGetOne(params);
+  const one = await service.getOne(params);
+  await service.afterGetOne(one, params);
+  return await <%= `build${getOneResponseName()}` %>(one, fieldRequest);
 }
   <%_ } -%>
   <%_ if (hasCreateOne() && !schema.methods.create.internal) { -%>
@@ -130,8 +134,10 @@ export async function <%= `createOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getOneEntityVarName() %> = await service.createOne(body);
-  return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
+  await beforeCreateOne(body);
+  const one = await service.createOne(body);
+  await afterCreateOne(one, body);
+  return await <%= `build${getOneResponseName()}` %>(one, fieldRequest);
 }
   <%_ } -%>
   <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
@@ -152,8 +158,11 @@ export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getOneEntityVarName() %> = await service.updateOne(params, body);
-  return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
+  const one = await service.getOne(params);
+  await service.beforeUpdateOne(one, body);
+  const updatedOne = await service.updateOne(one, body);
+  await service.afterUpdateOne(updatedOne, body);
+  return await <%= `build${getOneResponseName()}` %>(updatedOne, fieldRequest);
 }
   <%_ } -%>
   <%_ if (hasDeleteOne() && !schema.methods.delete.internal) { -%>
@@ -173,8 +182,11 @@ export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  const <%= getOneEntityVarName() %> = await service.deleteOne(params);
-  return await <%= `build${getOneResponseName()}` %>(<%= getOneEntityVarName() %>, fieldRequest);
+  const one = await service.getOne(params);
+  await service.beforeDeleteOne(one);
+  const deletedOne = await service.deleteOne(one);
+  await service.afterDeleteOne(deletedOne);
+  return await <%= `build${getOneResponseName()}` %>(deletedOne, fieldRequest);
 }
   <%_ } -%>
 

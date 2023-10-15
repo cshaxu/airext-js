@@ -36,22 +36,42 @@ export abstract class <%= `${getServiceName()}Base` %> {
   <%_ } -%>
   <%_ if (hasGetMany()) { -%>
 
-  public abstract getMany(params: <%= getGetManyQueryName() %>): Promise<<%= getThisEntityStrings().entityClass %>[]>;
+  public async beforeGetMany(_query: <%= getGetManyQueryName() %>): Promise<void> {}
+
+  public async afterGetMany(_many: <%= getThisEntityStrings().entityClass %>[], _query: <%= getGetManyQueryName() %>): Promise<void> {}
+
+  public abstract getMany(query: <%= getGetManyQueryName() %>): Promise<<%= getThisEntityStrings().entityClass %>[]>;
   <%_ } -%>
   <%_ if (hasGetOne()) { -%>
+
+  public async beforeGetOne(_params: <%= getGetOneParamsName() %>): Promise<void> {}
+
+  public async afterGetOne(_one: <%= getThisEntityStrings().entityClass %>, _params: <%= getGetOneParamsName() %>): Promise<void> {}
 
   public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasCreateOne()) { -%>
 
+  public async beforeCreateOne(_body: <%= getCreateOneBodyName() %>): Promise<void> {}
+
+  public async afterCreateOne(_createdOne: <%= getThisEntityStrings().entityClass %>, _body: <%= getCreateOneBodyName() %>): Promise<void> {}
+
   public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasUpdateOne()) { -%>
 
-  public abstract updateOne(params: <%= getGetOneParamsName() %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public async beforeUpdateOne(_one: <%= getThisEntityStrings().entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+
+  public async afterUpdateOne(_updatedOne: <%= getThisEntityStrings().entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+
+  public abstract updateOne(one: <%= getThisEntityStrings().entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
   <%_ if (hasDeleteOne()) { -%>
 
-  public abstract deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public async beforeDeleteOne(_one: <%= getThisEntityStrings().entityClass %>): Promise<void> {}
+
+  public async afterDeleteOne(_deletedOne: <%= getThisEntityStrings().entityClass %>): Promise<void> {}
+
+  public abstract deleteOne(one: <%= getThisEntityStrings().entityClass %>): Promise<<%= getThisEntityStrings().entityClass %>>;
   <%_ } -%>
 }
