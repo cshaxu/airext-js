@@ -134,9 +134,9 @@ export async function <%= `createOne${getThisEntityStrings().entName}` %>(
     <%= field.name %>,
     <%_ }); -%>
   );
-  await beforeCreateOne(body);
+  await service.beforeCreateOne(body);
   const one = await service.createOne(body);
-  await afterCreateOne(one, body);
+  await service.afterCreateOne(one, body);
   return await <%= `build${getOneResponseName()}` %>(one, fieldRequest);
 }
   <%_ } -%>
