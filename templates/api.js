@@ -1,5 +1,4 @@
 /* eslint-disable */
-
 function getApiPackageName() {
   const prefix = toKababCase(getThisEntityStrings().entName);
   const suffix = getModuleSuffix();
@@ -71,6 +70,39 @@ function hasDeleteOne() {
     !!method &&
     Object.keys(method).length > 0 &&
     !!method.import?.length
+  );
+}
+
+function hasExternalGetMany() {
+  return !schema.internal && hasGetMany() && !schema.methods.getMany.internal;
+}
+
+function hasExternalGetOne() {
+  return !schema.internal && hasGetOne() && !schema.methods.getOne.internal;
+}
+
+function hasExternalCreateOne() {
+  return !schema.internal && hasCreateOne() && !schema.methods.create.internal;
+}
+
+function hasExternalUpdateOne() {
+  return !schema.internal && hasUpdateOne() && !schema.methods.update.internal;
+}
+
+function hasExternalDeleteOne() {
+  return !schema.internal && hasDeleteOne() && !schema.methods.delete.internal;
+}
+
+function hasManyResponse() {
+  return hasExternalGetMany();
+}
+
+function hasOneResponse() {
+  return (
+    hasExternalGetOne() ||
+    hasExternalCreateOne() ||
+    hasExternalUpdateOne() ||
+    hasExternalDeleteOne()
   );
 }
 

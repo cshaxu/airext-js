@@ -1,5 +1,4 @@
-<% if (!schema.internal) { -%>
-import { exists } from '<%= config.airentPackage %>';
+<% if (!schema.internal /* hasManyResponse() || hasOneResponse() */) { -%>
 import {
   <%= getThisEntityStrings().fieldRequestClass %>,
   <%= getThisEntityStrings().responseClass %>,
@@ -11,15 +10,18 @@ import { <%= getServiceName() %> } from '<%= schema.service.import %>';
 import { <%= field.type %> } from '<%= field.import %>';
     <%_ }); -%>
   <%_ } -%>
-  <%_ if (hasGetMany() && !schema.methods.getMany.internal) { -%>
+<% } -%>
+<% if (!schema.internal /* hasExternalGetMany() */) { -%>
+import { exists } from '<%= config.airentPackage %>';
+<% } -%>
+<% if (hasExternalGetMany()) { -%>
 import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
-  <%_ } -%>
-  <%_ if (hasCreateOne() && !schema.methods.create.internal) { -%>
+<% } -%>
+<% if (hasExternalCreateOne()) { -%>
 import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
-  <%_ } -%>
-  <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
+<% } -%>
+<% if (hasExternalUpdateOne()) { -%>
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
-  <%_ } -%>
 <% } -%>
 <% if (hasGetOne()) { -%>
 
@@ -32,7 +34,7 @@ export type <%= getGetOneParamsName() %> = {
   <%_ }); -%>
 };
 <% } -%>
-<% if (!schema.internal) { -%>
+<% if (!schema.internal /* hasManyResponse() */) { -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -61,6 +63,8 @@ export type <%= getManyResponseName() %> = {
   <%_ } -%>
   <%= getManyEntitiesVarName() %>: <%= getThisEntityStrings().responseClass %>[];
 };
+<% } -%>
+<% if (!schema.internal /* hasOneResponse() */) { -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -71,92 +75,93 @@ export type <%= getOneResponseName() %> = {
   <%_ } -%>
   <%= getOneEntityVarName() %>: <%= getThisEntityStrings().responseClass %>;
 };
-  <%_ if (hasGetMany() && !schema.methods.getMany.internal) { -%>
+<% } -%>
+<% if (hasExternalGetMany()) { -%>
 
-    <%_ if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-    <%_ } -%>
+  <%_ } -%>
 export async function <%= `getMany${getPluralEntityName()}` %>(
   query: <%= getGetManyQueryName() %>,
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
+  <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getManyResponseName() %>> {
   const service = new <%= getServiceName() %>(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-    <%_ }); -%>
+  <%_ }); -%>
   );
   await service.beforeGetMany(query);
   const many = await service.getMany(query);
   await service.afterGetMany(many, query);
   return await <%= `build${getManyResponseName()}` %>(many, fieldRequest);
 }
-  <%_ } -%>
-  <%_ if (hasGetOne() && !schema.methods.getOne.internal) { -%>
+<% } -%>
+<% if (hasExternalGetOne()) { -%>
 
-    <%_ if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-    <%_ } -%>
+  <%_ } -%>
 export async function <%= `getOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
+  <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-    <%_ }); -%>
+  <%_ }); -%>
   );
   await service.beforeGetOne(params);
   const one = await service.getOne(params);
   await service.afterGetOne(one, params);
   return await <%= `build${getOneResponseName()}` %>(one, fieldRequest);
 }
-  <%_ } -%>
-  <%_ if (hasCreateOne() && !schema.methods.create.internal) { -%>
+<% } -%>
+<% if (hasExternalCreateOne()) { -%>
 
-    <%_ if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-    <%_ } -%>
+  <%_ } -%>
 export async function <%= `createOne${getThisEntityStrings().entName}` %>(
   body: <%= getCreateOneBodyName() %>,
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
+  <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-    <%_ }); -%>
+  <%_ }); -%>
   );
   await service.beforeCreateOne(body);
   const one = await service.createOne(body);
   await service.afterCreateOne(one, body);
   return await <%= `build${getOneResponseName()}` %>(one, fieldRequest);
 }
-  <%_ } -%>
-  <%_ if (hasUpdateOne() && !schema.methods.update.internal) { -%>
+<% } -%>
+<% if (hasExternalUpdateOne()) { -%>
 
-    <%_ if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-    <%_ } -%>
+  <%_ } -%>
 export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
   body: <%= getUpdateOneBodyName() %>,
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
+  <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-    <%_ }); -%>
+  <%_ }); -%>
   );
   const one = await service.getOne(params);
   await service.beforeUpdateOne(one, body);
@@ -164,23 +169,23 @@ export async function <%= `updateOne${getThisEntityStrings().entName}` %>(
   await service.afterUpdateOne(updatedOne, body);
   return await <%= `build${getOneResponseName()}` %>(updatedOne, fieldRequest);
 }
-  <%_ } -%>
-  <%_ if (hasDeleteOne() && !schema.methods.delete.internal) { -%>
+<% } -%>
+<% if (hasExternalDeleteOne()) { -%>
 
-    <%_ if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-    <%_ } -%>
+  <%_ } -%>
 export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
   params: <%= getGetOneParamsName() %>,
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
-    <%_ }); -%>
+  <%_ }); -%>
   fieldRequest?: <%= getThisEntityStrings().fieldRequestClass %>,
 ): Promise<<%= getOneResponseName() %>> {
   const service = new <%= getServiceName() %>(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ (schema.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
-    <%_ }); -%>
+  <%_ }); -%>
   );
   const one = await service.getOne(params);
   await service.beforeDeleteOne(one);
@@ -188,7 +193,8 @@ export async function <%= `deleteOne${getThisEntityStrings().entName}` %>(
   await service.afterDeleteOne(deletedOne);
   return await <%= `build${getOneResponseName()}` %>(deletedOne, fieldRequest);
 }
-  <%_ } -%>
+<% } -%>
+<% if (!schema.internal /* hasManyResponse() */) { -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
@@ -227,6 +233,8 @@ export async function <%= `build${getManyResponseName()}` %>(
   };
   return { cursor, <%= getManyEntitiesVarName() %> };
 }
+<% } -%>
+<% if (!schema.internal /* hasOneResponse() */) { -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
