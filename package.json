@@ -1,8 +1,11 @@
 {
   "name": "airext",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Airent Extension",
   "main": "./lib/index.js",
+  "bin": {
+    "airext": "./bin/index.js"
+  },
   "scripts": {
     "build": "rm -rf ./lib && tsc -p tsconfig.json"
   },
@@ -27,6 +30,7 @@
   },
   "homepage": "https://github.com/cshaxu/airext-js#readme",
   "files": [
+    "bin",
     "lib",
     "templates"
   ],
