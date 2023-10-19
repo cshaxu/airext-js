@@ -14,20 +14,6 @@ function askQuestion(question) {
   return new Promise((resolve) => rl.question(question, resolve));
 }
 
-async function configure() {
-  const enablePrisma = await askQuestion("Enable Prisma (yes): ");
-  const enableServiceApi = await askQuestion("Enable Service API: (yes): ");
-  const outputPath = await askQuestion("Output path: (./src/entities): ");
-  const config = {
-    type: type.length > 0 ? type : "commonjs",
-    schemaPath: schemaPath.length > 0 ? schemaPath : "schemas",
-    outputPath: outputPath.length > 0 ? outputPath : "src/entities",
-  };
-  const content = JSON.stringify(config, null, 2) + "\n";
-  await fs.promises.writeFile(CONFIG_FILE_PATH, content);
-  console.log(`[AIRENT/INFO] Configuration located at '${CONFIG_FILE_PATH}'`);
-}
-
 /** @typedef {Object} Config
  *  @property {"commonjs" | "module"} type
  *  @property {?string} airentPackage
@@ -54,44 +40,62 @@ async function getShouldEnable(name, isEnabled) {
   return ["yes", "y"].includes(shouldEnable.toLowerCase());
 }
 
+const PRISMA_PROLOGUE_PATH = "node_modules/airext/templates/prisma.js";
+const API_PROLOGUE_PATH = "node_modules/airext/templates/api.js";
+const SERVICE_TEMPLATE_PATH =
+  "node_modules/airext/templates/service-template.ts.ejs";
+const API_TEMPLATE_PATH = "node_modules/airext/templates/api-template.ts.ejs";
+
 async function main() {
   try {
     if (!fs.existsSync(CONFIG_FILE_PATH)) {
       throw new Error("[AIREXT/ERROR] airent.config.json is not found");
     }
     const config = await loadConfig();
-    const isPrismaEnabled = config.prologues?.includes(
-      "node_modules/airext/templates/prisma.js"
-    );
+    const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
     const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
-    const isServiceApiEnabled = config.prologues?.includes(
-      "node_modules/airext/templates/api.js"
-    );
+    const isServiceApiEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
     const shouldEnableServiceApi = await getShouldEnable(
       "Service Api",
       isServiceApiEnabled
     );
+
     if (!shouldEnablePrisma && !shouldEnableServiceApi) {
       return;
     }
+
     if (shouldEnablePrisma) {
       config.prologues = config.prologues ?? [];
-      config.prologues.push("node_modules/airext/templates/prisma.js");
+      config.prologues.push(PRISMA_PROLOGUE_PATH);
     }
+
     if (shouldEnableServiceApi) {
       config.prologues = config.prologues ?? [];
-      config.prologues.push("node_modules/airext/templates/api.js");
+      config.prologues.push(API_PROLOGUE_PATH);
+
       config.templates = config.templates ?? [];
-      config.templates.push({
-        name: "node_modules/airext/templates/service-template.ts.ejs",
-        suffix: "service",
-        skippable: false,
-      });
-      config.templates.push({
-        name: "node_modules/airext/templates/api-template.ts.ejs",
-        suffix: "api",
-        skippable: false,
-      });
+
+      const isServiceTepmlateAdded = config.templates.find(
+        (t) => t.name === SERVICE_TEMPLATE_PATH
+      );
+      if (!isServiceTepmlateAdded) {
+        config.templates.push({
+          name: SERVICE_TEMPLATE_PATH,
+          suffix: "service",
+          skippable: false,
+        });
+      }
+
+      const isApiTepmlateAdded = config.templates.find(
+        (t) => t.name === API_TEMPLATE_PATH
+      );
+      if (!isApiTepmlateAdded) {
+        config.templates.push({
+          name: API_TEMPLATE_PATH,
+          suffix: "api",
+          skippable: false,
+        });
+      }
     }
     const content = JSON.stringify(config, null, 2) + "\n";
     await fs.promises.writeFile(CONFIG_FILE_PATH, content);
