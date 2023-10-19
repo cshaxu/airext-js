@@ -55,6 +55,11 @@ async function main() {
     const config = await loadConfig();
     const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
     const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
+    const prismaGlobalImport = shouldEnablePrisma
+      ? await askQuestion(
+          "Statement to import 'prisma' (e.g. 'import prisma from '@/lib/prisma.js';' or leave empty): "
+        )
+      : "";
     const isServiceApiEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
     const shouldEnableServiceApi = await getShouldEnable(
       "Service Api",
@@ -66,15 +71,12 @@ async function main() {
     }
 
     if (shouldEnablePrisma) {
-      config.prologues = config.prologues ?? [];
-      config.prologues.push(PRISMA_PROLOGUE_PATH);
-      const prismaGlobalImport = await askQuestion(
-        "Statement to import 'prisma' (e.g. 'import prisma from '@/lib/prisma.js';' or leave empty): "
-      );
       if (prismaGlobalImport.length) {
         config.globalImports = config.globalImports ?? [];
         config.globalImports.push(prismaGlobalImport);
       }
+      config.prologues = config.prologues ?? [];
+      config.prologues.push(PRISMA_PROLOGUE_PATH);
     }
 
     if (shouldEnableServiceApi) {
