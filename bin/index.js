@@ -19,6 +19,7 @@ function askQuestion(question) {
  *  @property {?string} airentPackage
  *  @property {string} schemaPath
  *  @property {string} outputPath
+ *  @property {?string[]} [globalImports]
  *  @property {?string[]} [prologues]
  *  @property {?Template[]} [templates]
  */
@@ -37,7 +38,7 @@ async function getShouldEnable(name, isEnabled) {
     return false;
   }
   const shouldEnable = await askQuestion(`Enable ${name} (yes): `);
-  return ["yes", "y"].includes(shouldEnable.toLowerCase());
+  return ["yes", "y", ""].includes(shouldEnable.toLowerCase());
 }
 
 const PRISMA_PROLOGUE_PATH = "node_modules/airext/templates/prisma.js";
@@ -67,6 +68,13 @@ async function main() {
     if (shouldEnablePrisma) {
       config.prologues = config.prologues ?? [];
       config.prologues.push(PRISMA_PROLOGUE_PATH);
+      const prismaGlobalImport = await askQuestion(
+        "Statement to import 'prisma' (e.g. 'import prisma from '@/lib/prisma.js';' or leave empty): "
+      );
+      if (prismaGlobalImport.length) {
+        config.globalImports = config.globalImports ?? [];
+        config.globalImports.push(prismaGlobalImport);
+      }
     }
 
     if (shouldEnableServiceApi) {
