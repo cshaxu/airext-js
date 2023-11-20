@@ -1,0 +1,185 @@
+<%
+function getApiBasePath() {
+  const pluralized = pluralize(getThisEntityStrings().entName);
+  const snakeCased = toSnakeCase(toCamelCase(pluralized));
+  return `/api/restful/${snakeCased}`;
+}
+
+function presentField(field) {
+  const presenter = isEntityTypeField(field)
+    ? `${toTitleCase(toPrimitiveTypeName(field.type))}Axios.present`
+    : isDateTypeField(field)
+    ? 'new Date'
+    : 'INVALID';
+  const onePresenter = `${presenter}(one.${field.name})`;
+  if (isArrayField(field)) {
+    return `one.${field.name}.map(${presenter})`;
+  }
+  if (isNullableField(field)) {
+    return `one.${field.name} === null ? null : ${onePresenter}`;
+  }
+  return onePresenter;
+}
+-%>
+import { <%= getThisEntityStrings().responseClass %> } from './<%= getThisEntityStrings().typePackage %>';
+<% schema.types.filter(isEntityType).filter((type) => type.name !== getThisEntityStrings().entName).forEach((type) => { -%>
+import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
+<% }); -%>
+<% if (hasManyResponse() || hasOneResponse()) { -%>
+import axios from '@/frontend/lib/custom-axios';
+<% } -%>
+<% if (hasManyResponse()) { -%>
+import { toQueryString } from '@/utils/object';
+import { <%= getManyResponseName() %> } from './<%= getApiPackageName() %>';
+<% } -%>
+<% if (hasOneResponse()) { -%>
+import { <%= getOneResponseName() %> } from './<%= getApiPackageName() %>';
+<% } -%>
+<%_ if (hasExternalGetOne() || hasExternalDeleteOne()) { -%>
+import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
+<%_ } -%>
+<%_ if (hasExternalGetMany()) { -%>
+import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
+<%_ } -%>
+<%_ if (hasExternalCreateOne()) { -%>
+import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
+<%_ } -%>
+<%_ if (hasExternalUpdateOne()) { -%>
+import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
+<%_ } -%>
+
+function present(one: any): <%= getThisEntityStrings().responseClass %> {
+  return {
+    ...one,
+<% schema.fields.filter(isExternalField).filter((field) => isDateTypeField(field) || isEntityTypeField(field)).forEach((field) => { -%>
+    ...(one.<%= field.name %> !== undefined && { <%= field.name %>: <%= presentField(field) %> }),
+<% }); -%>
+  };
+}
+<% if (hasManyResponse()) { -%>
+
+function presentManyResponse(response: any): <%= getManyResponseName() %> {
+  const cursor = {
+    ...response.cursor,
+  <%_ schema.fields.filter(isDateTypeField).filter(isCursorField).forEach((field) => { -%>
+    <%= `min${toTitleCase(field.name)}` %>: new Date(response.cursor.<%= `min${toTitleCase(field.name)}` %>),
+    <%= `max${toTitleCase(field.name)}` %>: new Date(response.cursor.<%= `max${toTitleCase(field.name)}` %>),
+  <%_ }); -%>
+  };
+  return { cursor, <%= getManyEntitiesVarName() %>: response.<%= getManyEntitiesVarName() %>.map(present) };
+}
+<% } -%>
+<% if (hasOneResponse()) { -%>
+
+function presentOneResponse(response: any): <%= getOneResponseName() %> {
+  return { <%= getOneEntityVarName() %>: present(response.<%= getOneEntityVarName() %>) };
+}
+<% } -%>
+<% if (hasExternalGetMany()) { -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+async function getMany(query: <%= getGetManyQueryName() %>): Promise<<%= getManyResponseName() %>> {
+  const queryString = toQueryString(query);
+  const pathSuffix = queryString.length ? `?${queryString}` : '';
+  const path = `<%= getApiBasePath() %>${pathSuffix}`;
+  const { data } = await axios.get(path);
+  return presentManyResponse(data);
+}
+<% } -%>
+<% if (hasExternalGetOne()) { -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+async function getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getOneResponseName() %>> {
+  const { <%= schema.methods.getOne.keys.join(', ') %> } = params;
+  const pathSuffix = `<%- schema.methods.getOne.keys.map((key) => `\${${key}}` ).join('/') %>`;
+  const path = `<%= getApiBasePath() %>/${pathSuffix}`;
+  const { data } = await axios.get(path);
+  return presentOneResponse(data);
+}
+<% } -%>
+<% if (hasExternalCreateOne()) { -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+async function createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= getOneResponseName() %>> {
+  const path = '<%= getApiBasePath() %>';
+  const { data } = await axios.post(path, body);
+  return presentOneResponse(data);
+}
+<% } -%>
+<% if (hasExternalUpdateOne()) { -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+async function updateOne(params: <%= getGetOneParamsName() %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getOneResponseName() %>> {
+  const { <%= schema.methods.getOne.keys.join(', ') %> } = params;
+  const pathSuffix = `<%- schema.methods.getOne.keys.map((key) => `\${${key}}` ).join('/') %>`;
+  const path = `<%= getApiBasePath() %>/${pathSuffix}`;
+  const { data } = await axios.put(path, body);
+  return presentOneResponse(data);
+}
+<% } -%>
+<% if (hasExternalDeleteOne()) { -%>
+
+  <%_ if (schema.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+async function deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getOneResponseName() %>> {
+  const { <%= schema.methods.getOne.keys.join(', ') %> } = params;
+  const pathSuffix = `<%- schema.methods.getOne.keys.map((key) => `\${${key}}` ).join('/') %>`;
+  const path = `<%= getApiBasePath() %>/${pathSuffix}`;
+  const { data } = await axios.delete(path);
+  return presentOneResponse(data);
+}
+<% } -%>
+
+<% if (schema.deprecated) { -%>
+/** @deprecated */
+<% } -%>
+const <%= `${getThisEntityStrings().entName}Axios` %> = {
+  present,
+<% if (hasManyResponse()) { -%>
+  presentManyResponse,
+<% } -%>
+<% if (hasOneResponse()) { -%>
+  presentOneResponse,
+<% } -%>
+<% if (hasExternalGetMany()) { -%>
+  <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+  <%_ } -%>
+  getMany,
+<% } -%>
+<% if (hasExternalGetOne()) { -%>
+  <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+  <%_ } -%>
+  getOne,
+<% } -%>
+<% if (hasExternalCreateOne()) { -%>
+  <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+  <%_ } -%>
+  createOne,
+<% } -%>
+<% if (hasExternalUpdateOne()) { -%>
+  <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+  <%_ } -%>
+  updateOne,
+<% } -%>
+<% if (hasExternalDeleteOne()) { -%>
+  <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+  <%_ } -%>
+  deleteOne,
+<% } -%>
+};
+
+export default <%= `${getThisEntityStrings().entName}Axios` %>;

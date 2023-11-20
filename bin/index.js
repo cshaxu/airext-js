@@ -46,6 +46,8 @@ const API_PROLOGUE_PATH = "node_modules/airext/templates/api.js";
 const SERVICE_TEMPLATE_PATH =
   "node_modules/airext/templates/service-template.ts.ejs";
 const API_TEMPLATE_PATH = "node_modules/airext/templates/api-template.ts.ejs";
+const AXIOS_TEMPLATE_PATH =
+  "node_modules/airext/templates/axios-template.ts.ejs";
 
 async function main() {
   try {
@@ -53,20 +55,32 @@ async function main() {
       throw new Error("[AIREXT/ERROR] airent.config.json is not found");
     }
     const config = await loadConfig();
+
     const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
     const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
     const prismaGlobalImport = shouldEnablePrisma
       ? await askQuestion(
-          "Statement to import 'prisma' (e.g. 'import prisma from '@/lib/prisma.js';' or leave empty): "
+          "Statement to import 'prisma' (e.g. \"import prisma from '@/lib/prisma';\" or leave empty): "
         )
       : "";
-    const isServiceApiEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
-    const shouldEnableServiceApi = await getShouldEnable(
-      "Service Api",
-      isServiceApiEnabled
+
+    const isApiServiceEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
+    const shouldEnableApiService = await getShouldEnable(
+      "Backend Api Service",
+      isApiServiceEnabled
     );
 
-    if (!shouldEnablePrisma && !shouldEnableServiceApi) {
+    const isApiClientEnabled = config.templates?.includes(AXIOS_TEMPLATE_PATH);
+    const shouldEnableApiClient = await getShouldEnable(
+      "Axios Api Client",
+      isApiClientEnabled
+    );
+
+    if (
+      !shouldEnablePrisma &&
+      !shouldEnableApiService &&
+      !shouldEnableApiClient
+    ) {
       return;
     }
 
@@ -79,16 +93,16 @@ async function main() {
       config.prologues.push(PRISMA_PROLOGUE_PATH);
     }
 
-    if (shouldEnableServiceApi) {
+    if (shouldEnableApiService) {
       config.prologues = config.prologues ?? [];
       config.prologues.push(API_PROLOGUE_PATH);
 
       config.templates = config.templates ?? [];
 
-      const isServiceTepmlateAdded = config.templates.find(
+      const isApiServiceTepmlateAdded = config.templates.find(
         (t) => t.name === SERVICE_TEMPLATE_PATH
       );
-      if (!isServiceTepmlateAdded) {
+      if (!isApiServiceTepmlateAdded) {
         config.templates.push({
           name: SERVICE_TEMPLATE_PATH,
           suffix: "service",
@@ -107,6 +121,21 @@ async function main() {
         });
       }
     }
+
+    if (shouldEnableApiClient) {
+      config.templates = config.templates ?? [];
+      const isApiClientTepmlateAdded = config.templates.find(
+        (t) => t.name === AXIOS_TEMPLATE_PATH
+      );
+      if (!isApiClientTepmlateAdded) {
+        config.templates.push({
+          name: AXIOS_TEMPLATE_PATH,
+          suffix: "axios",
+          skippable: false,
+        });
+      }
+    }
+
     const content = JSON.stringify(config, null, 2) + "\n";
     await fs.promises.writeFile(CONFIG_FILE_PATH, content);
     console.log(`[AIRENT/INFO] Configuration located at '${CONFIG_FILE_PATH}'`);

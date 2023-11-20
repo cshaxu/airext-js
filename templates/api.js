@@ -1,12 +1,17 @@
 /* eslint-disable */
+
+// strings
+
+function toSnakeCase(string) {
+  return string.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
+}
+
+// names
+
 function getApiPackageName() {
   const prefix = toKababCase(getThisEntityStrings().entName);
   const suffix = getModuleSuffix();
   return `${prefix}-api${suffix}`;
-}
-
-function isCursorField(field) {
-  return !!field.cursor && isExternalField(field);
 }
 
 function getPluralEntityName() {
@@ -31,6 +36,37 @@ function getManyResponseName() {
 
 function getOneResponseName() {
   return `One${getThisEntityStrings().entName}Response`;
+}
+
+function getServiceName() {
+  return `${getThisEntityStrings().entName}Service`;
+}
+
+function getGetManyQueryName() {
+  return `GetMany${getPluralEntityName()}Query`;
+}
+
+function getGetOneParamsName() {
+  return `GetOne${getThisEntityStrings().entName}Params`;
+}
+
+function getCreateOneBodyName() {
+  return `CreateOne${getThisEntityStrings().entName}Body`;
+}
+
+function getUpdateOneBodyName() {
+  return `UpdateOne${getThisEntityStrings().entName}Body`;
+}
+
+// booleans
+
+function isCursorField(field) {
+  return !!field.cursor && isExternalField(field);
+}
+
+function isDateTypeField(field) {
+  const fieldTypeName = toPrimitiveTypeName(field.type);
+  return fieldTypeName === "Date";
 }
 
 function hasGetMany() {
@@ -104,24 +140,4 @@ function hasOneResponse() {
     hasExternalUpdateOne() ||
     hasExternalDeleteOne()
   );
-}
-
-function getServiceName() {
-  return `${getThisEntityStrings().entName}Service`;
-}
-
-function getGetManyQueryName() {
-  return `GetMany${getPluralEntityName()}Query`;
-}
-
-function getGetOneParamsName() {
-  return `GetOne${getThisEntityStrings().entName}Params`;
-}
-
-function getCreateOneBodyName() {
-  return `CreateOne${getThisEntityStrings().entName}Body`;
-}
-
-function getUpdateOneBodyName() {
-  return `UpdateOne${getThisEntityStrings().entName}Body`;
 }
