@@ -26,7 +26,7 @@ import { <%= getThisEntityStrings().responseClass %> } from './<%= getThisEntity
 import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
 <% }); -%>
 <% if (hasManyResponse() || hasOneResponse()) { -%>
-import axios from '@/frontend/lib/custom-axios';
+import axios from '<%= config.axiosPackage ?? 'axios' %>';
 <% } -%>
 <% if (hasManyResponse()) { -%>
 import { toQueryString } from '@/utils/object';
