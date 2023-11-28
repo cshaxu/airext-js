@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 function getGlobalImports() {
-  const globalImports = config.globalImports ?? [
+  const globalImports = JSON.parse(JSON.stringify(config.globalImports)) ?? [
     "import prisma from 'TODO: specify globalImports in airent config';",
   ];
   globalImports.push("import { batchLoad } from 'airext';");
