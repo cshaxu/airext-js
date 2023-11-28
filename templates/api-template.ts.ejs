@@ -10,6 +10,9 @@ import { <%= getServiceName() %> } from '<%= schema.service.import %>';
 import { <%= field.type %> } from '<%= field.import %>';
     <%_ }); -%>
   <%_ } -%>
+  <%_ schema.types.filter(isEntityType).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
+import { <%= getTypeStrings(type).fieldRequestClass %>, <%= getTypeStrings(type).responseClass %> } from './<%= getTypeStrings(type).typePackage %>';
+  <%_ }); -%>
 <% } -%>
 <% if (!schema.internal /* hasExternalGetMany() */) { -%>
 import { exists } from '<%= config.airentPackage %>';
