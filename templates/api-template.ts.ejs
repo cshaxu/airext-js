@@ -6,12 +6,12 @@ import {
 import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
   <%_ if (schema.service) { -%>
 import { <%= getServiceName() %> } from '<%= schema.service.import %>';
-    <%_ (schema.service.fields ?? []).filter((field) => field.import?.length).forEach((field) => { -%>
-import { <%= field.type %> } from '<%= field.import %>';
-    <%_ }); -%>
   <%_ } -%>
   <%_ schema.types.filter(isExternalType).forEach((type) => { -%>
 import { <%= getTypeStrings(type).externalClass %> } from '<%= getTypeStrings(type).externalPackage %>';
+  <%_ }); -%>
+  <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
+import { <%= getTypeStrings(type).typeName %> } from './<%= getThisEntityStrings().typePackage %>';
   <%_ }); -%>
 <% } -%>
 <% if (!schema.internal /* hasExternalGetMany() */) { -%>
@@ -48,11 +48,11 @@ export type <%= getCursorName() %> = {
     <%_ if (field.deprecated) { -%>
   /** @deprecated */
     <%_ } -%>
-    <%= `min${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+  <%= `min${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
     <%_ if (field.deprecated) { -%>
   /** @deprecated */
     <%_ } -%>
-    <%= `max${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+  <%= `max${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
   <%_ }); -%>
 };
 
@@ -211,21 +211,17 @@ export async function <%= `build${getManyResponseName()}` %>(
   const <%= `min${toTitleCase(field.name)}` %> = many
     .map((one) => one.<%= field.name %>)
     .filter(exists)
-    .reduce((acc, value) => {
-      if (acc === undefined || acc > value) {
-        return value;
-      }
-      return acc;
-    }, undefined as <%= field.type %> | undefined);
+    .reduce(
+      (acc, value) => (acc === undefined || acc > value ? value : acc),
+      undefined as <%= field.type %> | undefined
+    );
   const <%= `max${toTitleCase(field.name)}` %> = many
     .map((one) => one.<%= field.name %>)
     .filter(exists)
-    .reduce((acc, value) => {
-      if (acc === undefined || acc < value) {
-        return value;
-      }
-      return acc;
-    }, undefined as <%= field.type %> | undefined);
+    .reduce(
+      (acc, value) => (acc === undefined || acc < value ? value : acc),
+      undefined as <%= field.type %> | undefined
+    );
   <%_ }); -%>
   const cursor = {
     count: many.length,

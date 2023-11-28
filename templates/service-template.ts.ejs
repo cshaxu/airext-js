@@ -1,7 +1,10 @@
 <% if (schema.methods) { -%>
 import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
-  <%_ (schema.service?.fields ?? []).filter((field) => field.import?.length).forEach((field) => { -%>
-import { <%= field.type %> } from '<%= field.import %>';
+  <%_ schema.types.filter(isExternalType).forEach((type) => { -%>
+import { <%= getTypeStrings(type).externalClass %> } from '<%= getTypeStrings(type).externalPackage %>';
+  <%_ }); -%>
+  <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
+import { <%= getTypeStrings(type).typeName %> } from './<%= getThisEntityStrings().typePackage %>';
   <%_ }); -%>
   <%_ if (hasGetOne()) { -%>
 import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
