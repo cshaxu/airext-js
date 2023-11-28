@@ -10,8 +10,8 @@ import { <%= getServiceName() %> } from '<%= schema.service.import %>';
 import { <%= field.type %> } from '<%= field.import %>';
     <%_ }); -%>
   <%_ } -%>
-  <%_ schema.types.forEach((type) => { -%>
-import { <%= getTypeStrings(type).fieldRequestClass %>, <%= getTypeStrings(type).responseClass %> } from './<%= getTypeStrings(type).typePackage %>';
+  <%_ schema.types.filter(isExternalType).forEach((type) => { -%>
+import { <%= getTypeStrings(type).externalClass %> } from '<%= getTypeStrings(type).externalPackage %>';
   <%_ }); -%>
 <% } -%>
 <% if (!schema.internal /* hasExternalGetMany() */) { -%>
