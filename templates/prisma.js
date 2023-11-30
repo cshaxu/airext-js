@@ -9,20 +9,28 @@ function getGlobalImports() {
 }
 
 function isLoaderGeneratable(field) {
-  return hasSourceKey(field) && hasTargetKey(field) && !field.skipPrismaLoader;
+  if (field.prismaLoader === true) {
+    return true;
+  }
+  if (field.prismaLoader === false) {
+    return false;
+  }
+  return isEntityTypeField(field);
+}
+
+// internal
+function buildModelsLoader(entityName) {
+  const prismaName = toCamelCase(entityName);
+  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
 }
 
 function getSelfLoadedModels() {
-  const prismaName = toCamelCase(getThisEntityStrings().entName);
-  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
+  return buildModelsLoader(getThisEntityStrings().entName);
 }
 
 function getTargetLoadedModels(field) {
-  if (!isEntityTypeField(field) || !hasSourceKey(field)) {
-    return "[/* TODO: load associated models here */]";
-  } else if (!hasTargetKey(field)) {
-    return "[/* TODO: load associated models with load keys */]";
+  if (!isLoaderGeneratable(field)) {
+    return "[/* TODO: load associated models */]";
   }
-  const prismaName = toCamelCase(toPrimitiveTypeName(field.type));
-  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
+  return buildModelsLoader(toPrimitiveTypeName(field.type));
 }
