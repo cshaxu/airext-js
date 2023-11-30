@@ -3,7 +3,7 @@ import { isNil, isUndefined, omit, omitBy } from "lodash-es";
 type LoadKey = { [x: string]: any };
 
 async function batchLoad<T>(
-  executor: (query: LoadKey) => Promise<T[]>,
+  executor: (query: any) => Promise<T[]>,
   keys: LoadKey[],
   limit: number = 1000
 ): Promise<T[]> {
