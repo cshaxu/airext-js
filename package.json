@@ -35,7 +35,11 @@
     "templates"
   ],
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.8.4",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "lodash-es": "^4.17.21"
   }
 }

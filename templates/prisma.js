@@ -12,20 +12,17 @@ function isLoaderGeneratable(field) {
   return hasSourceKey(field) && hasTargetKey(field) && !field.skipPrismaLoader;
 }
 
+function getSelfLoadedModels() {
+  const prismaName = toCamelCase(getThisEntityStrings().entName);
+  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
+}
+
 function getTargetLoadedModels(field) {
   if (!isEntityTypeField(field) || !hasSourceKey(field)) {
     return "[/* TODO: load associated models here */]";
   } else if (!hasTargetKey(field)) {
-    return "[/* TODO: load associated models with the above keys */]";
+    return "[/* TODO: load associated models with load keys */]";
   }
-
   const prismaName = toCamelCase(toPrimitiveTypeName(field.type));
-
-  const sourceKeyArrays = getSourceFields(field).map((sf) => `${sf.name}s`);
-  const targetKeyNames = field.targetFields;
-  const conditions = targetKeyNames.map(
-    (tkn, i) => `${tkn}: { in: ${sourceKeyArrays[i]} }`
-  );
-  const where = `where: { ${conditions.join(", ")} }`;
-  return `await batchLoad(prisma.${prismaName}.findMany, { ${where} })`;
+  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
 }
