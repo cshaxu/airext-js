@@ -46,11 +46,11 @@ export type <%= getCursorName() %> = {
     <%_ if (field.deprecated) { -%>
   /** @deprecated */
     <%_ } -%>
-  <%= `min${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+  <%= `min${toTitleCase(field.name)}` %>: <%= getFieldStrings(field).fieldResponseType %> | null;
     <%_ if (field.deprecated) { -%>
   /** @deprecated */
     <%_ } -%>
-  <%= `max${toTitleCase(field.name)}` %>?: <%= getFieldStrings(field).fieldResponseType %>;
+  <%= `max${toTitleCase(field.name)}` %>: <%= getFieldStrings(field).fieldResponseType %> | null;
   <%_ }); -%>
 };
 
