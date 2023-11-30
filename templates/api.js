@@ -2,12 +2,6 @@
 
 // strings
 
-function toSnakeCase(string) {
-  return string.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
-}
-
-// names
-
 function getApiPackageName() {
   const prefix = toKababCase(getThisEntityStrings().entName);
   const suffix = getModuleSuffix();

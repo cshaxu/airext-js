@@ -1,8 +1,8 @@
 <%
 function getApiBasePath() {
   const pluralized = pluralize(getThisEntityStrings().entName);
-  const snakeCased = toSnakeCase(toCamelCase(pluralized));
-  return `/api/restful/${snakeCased}`;
+  const kababCased = toKababCase(toCamelCase(pluralized));
+  return `${config.apiBasePath}/${kababCased}`;
 }
 
 function presentField(field) {

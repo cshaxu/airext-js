@@ -75,6 +75,9 @@ async function main() {
       "Axios Api Client",
       isApiClientEnabled
     );
+    const apiBasePath = shouldEnableApiClient
+      ? await askQuestion('Base path for backend api (e.g. "/api/restful"): ')
+      : "";
 
     if (
       !shouldEnablePrisma &&
@@ -133,6 +136,10 @@ async function main() {
           suffix: "axios",
           skippable: false,
         });
+      }
+      const isApiBasePathAdded = !!config.apiBasePath?.length;
+      if (!isApiBasePathAdded) {
+        config.apiBasePath = apiBasePath;
       }
     }
 
