@@ -1,2 +1,5 @@
-declare function batchLoad<T>(loader: (params: any) => Promise<T[]>, params: any, batchSize?: number): Promise<T[]>;
+type LoadKey = {
+    [x: string]: any;
+};
+declare function batchLoad<T>(executor: (query: any) => Promise<T[]>, keys: LoadKey[], limit?: number): Promise<T[]>;
 export { batchLoad };
