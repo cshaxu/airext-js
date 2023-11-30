@@ -56,4 +56,4 @@ function buildWhere(loadKeys: LoadKey[]): LoadKey {
   return where;
 }
 
-export { batchLoad };
+export { batchLoad, buildWhere };
