@@ -1,4 +1,5 @@
 <% if (!schema.internal /* hasManyResponse() || hasOneResponse() */) { -%>
+import { getMax, getMin } from 'airext';
 import {
   <%= getThisEntityStrings().fieldRequestClass %>,
   <%= getThisEntityStrings().responseClass %>,
@@ -13,9 +14,6 @@ import { <%= getTypeStrings(type).externalClass %> } from '<%= getTypeStrings(ty
   <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
 import { <%= getTypeStrings(type).typeName %> } from './<%= getThisEntityStrings().typePackage %>';
   <%_ }); -%>
-<% } -%>
-<% if (!schema.internal /* hasExternalGetMany() */) { -%>
-import { exists } from '<%= config.airentPackage %>';
 <% } -%>
 <% if (hasExternalGetMany()) { -%>
 import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
@@ -208,20 +206,9 @@ export async function <%= `build${getManyResponseName()}` %>(
 ): Promise<<%= getManyResponseName() %>> {
   const <%= getManyEntitiesVarName() %> = await <%= getThisEntityStrings().entityClass %>.presentMany(many, fieldRequest);
   <%_ schema.fields.filter(isCursorField).forEach((field) => { -%>
-  const <%= `min${toTitleCase(field.name)}` %> = many
-    .map((one) => one.<%= field.name %>)
-    .filter(exists)
-    .reduce(
-      (acc, value) => (acc === undefined || acc > value ? value : acc),
-      undefined as <%= field.type %> | undefined
-    );
-  const <%= `max${toTitleCase(field.name)}` %> = many
-    .map((one) => one.<%= field.name %>)
-    .filter(exists)
-    .reduce(
-      (acc, value) => (acc === undefined || acc < value ? value : acc),
-      undefined as <%= field.type %> | undefined
-    );
+  const <%= pluralize(field.name) %> = many.map((one) => one.<%= field.name %>);
+  const <%= `min${toTitleCase(field.name)}` %> = getMin(<%= pluralize(field.name) %>);
+  const <%= `max${toTitleCase(field.name)}` %> = getMax(<%= pluralize(field.name) %>);
   <%_ }); -%>
   const cursor = {
     count: many.length,
