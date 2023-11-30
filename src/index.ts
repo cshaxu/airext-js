@@ -1,4 +1,4 @@
-import { isNil, isUndefined, omit, omitBy } from "lodash-es";
+import { isNil, isUndefined, omit, omitBy } from "lodash";
 
 type LoadKey = { [x: string]: any };
 
