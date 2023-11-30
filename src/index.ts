@@ -1,9 +1,9 @@
-import { isNil, omit } from "lodash-es";
+import { isNil, isUndefined, omit, omitBy } from "lodash-es";
 
 type LoadKey = { [x: string]: any };
 
 async function batchLoad<T>(
-  executor: (query: any) => Promise<T[]>,
+  executor: (query: LoadKey) => Promise<T[]>,
   keys: LoadKey[],
   limit: number = 1000
 ): Promise<T[]> {
@@ -72,4 +72,12 @@ function getMax<T>(array: T[]): T | null {
   );
 }
 
-export { batchLoad, buildWhere, getMax, getMin };
+function toQueryString(query: LoadKey): string {
+  query = omitBy(query, isUndefined);
+  Object.keys(query)
+    .filter((key) => query[key] instanceof Date)
+    .forEach((key) => (query[key] = query[key].toISOString()));
+  return new URLSearchParams(query).toString();
+}
+
+export { batchLoad, buildWhere, getMax, getMin, toQueryString };

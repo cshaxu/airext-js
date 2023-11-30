@@ -29,7 +29,7 @@ import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.n
 import axios from '<%= config.axiosPackage ?? 'axios' %>';
 <% } -%>
 <% if (hasManyResponse()) { -%>
-import { toQueryString } from '@/utils/object';
+import { toQueryString } from 'airext';
 import { <%= getManyResponseName() %> } from './<%= getApiPackageName() %>';
 <% } -%>
 <% if (hasOneResponse()) { -%>
