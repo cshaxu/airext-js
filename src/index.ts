@@ -7,6 +7,9 @@ async function batchLoad<T>(
   keys: LoadKey[],
   limit: number = 1000
 ): Promise<T[]> {
+  if (keys.length === 0) {
+    return [];
+  }
   const array = new Array<T>();
   const where = buildWhere(keys);
   let offset = 0;
