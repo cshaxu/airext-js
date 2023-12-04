@@ -1,6 +1,6 @@
 import { isNil, isUndefined, omit, omitBy } from "lodash";
 
-type LoadKey = { [x: string]: any };
+type LoadKey = Record<string, any>;
 
 async function batchLoad<T>(
   executor: (query: any) => Promise<T[]>,
@@ -35,7 +35,7 @@ function buildWhere(loadKeys: LoadKey[]): LoadKey {
       acc[entry[0]] = array;
     });
     return acc;
-  }, {} as { [x: string]: any[] });
+  }, {} as Record<string, any[]>);
   const allKeys = Object.keys(map);
   const singleKeys = Object.entries(map)
     .filter((entry: [string, any[]]) => new Set(entry[1]).size === 1)
