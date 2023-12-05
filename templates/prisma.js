@@ -103,7 +103,7 @@ function getLoadConfigSetterLines(field) /* Code[] */ {
   const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
     otherEntityName
   ).map((af) => [
-    `if one.(${af.name} === undefined) {`,
+    `if (one.${af.name} === undefined) {`,
     `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
     `} else {`,
     isArrayField(field)
