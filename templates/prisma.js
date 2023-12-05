@@ -1,14 +1,26 @@
 /* eslint-disable */
 
-function getGlobalImports() {
-  const globalImports = JSON.parse(JSON.stringify(config.globalImports)) ?? [
-    "import prisma from 'TODO: specify globalImports in airent config';",
-  ];
-  globalImports.push("import { batchLoad } from 'airext';");
-  return globalImports;
+/**********/
+/* QUERY  */
+/**********/
+
+function getAuxiliaryFields() /* Field[] */ {
+  return schema.fields.filter(isAuxiliaryField);
 }
 
-function isLoaderGeneratable(field) {
+function getOtherEntityAuxiliaryFields(entityName) /* Field[] */ {
+  return schemaMap[entityName]?.fields?.filter(isAuxiliaryField);
+}
+
+/***********/
+/* BOOLEAN */
+/***********/
+
+function isAuxiliaryField(field) /* boolean */ {
+  return field.type.endsWith(" | undefined");
+}
+
+function isLoaderGeneratable(field) /* boolean */ {
   if (field.prismaLoader === true) {
     return true;
   }
@@ -18,19 +30,83 @@ function isLoaderGeneratable(field) {
   return isEntityTypeField(field);
 }
 
-// internal
-function buildModelsLoader(entityName) {
+/********/
+/* CODE */
+/********/
+
+/* line */
+
+function buildModelsLoader(entityName) /* Code */ {
   const prismaName = toCamelCase(entityName);
   return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
 }
 
-function getSelfLoadedModels() {
+function getSelfLoadedModels() /* Code */ {
   return buildModelsLoader(getThisEntityStrings().entName);
 }
 
-function getTargetLoadedModels(field) {
+function getTargetLoadedModels(field) /* Code */ {
   if (!isLoaderGeneratable(field)) {
     return "[/* TODO: load associated models */]";
   }
   return buildModelsLoader(toPrimitiveTypeName(field.type));
+}
+
+/* block */
+
+function getGlobalImports() /* Code[] */ {
+  const globalImports = JSON.parse(JSON.stringify(config.globalImports)) ?? [
+    "import prisma from 'TODO: specify globalImports in airent config';",
+  ];
+  globalImports.push("import { batchLoad } from 'airext';");
+  return globalImports;
+}
+
+function getSelfLoaderLines() /* Code[] */ {
+  const auxiliaryFields = getAuxiliaryFields();
+  const beforeLine = `if (keys.length === 0) { return []; }`;
+  const afterLine = `return (this as any).fromArray(loadedModels);`;
+  if (auxiliaryFields.length === 0) {
+    const loadedModelsLine = `const loadedModels = ${getSelfLoadedModels()};`;
+    return [beforeLine, loadedModelsLine, afterLine];
+  }
+  const auxiliaryFieldLines = auxiliaryFields.map((af) => [
+    `const { ${af.name} } = keys[0];`,
+    `if (${af.name} === undefined) {`,
+    `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
+    `}`,
+  ]);
+  const prismaModelsLine = `const prismaModels = ${getSelfLoadedModels()};`;
+  const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFields
+    .map((af) => af.name)
+    .join(", ")} }));`;
+  return [
+    beforeLine,
+    ...auxiliaryFieldLines.flat(),
+    prismaModelsLine,
+    loadedModelsLine,
+    afterLine,
+  ];
+}
+
+function getLoadConfigSetterLines(field) /* Code[] */ {
+  const mapper = getLoadConfigTargetMapper(field);
+  const setter = getLoadConfigSourceSetter(field);
+  const otherEntityName = toTitleCase(toPrimitiveTypeName(field.type));
+  const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
+    otherEntityName
+  ).map((af) => [
+    `if (${af.name} === undefined) {`,
+    `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
+    `} else {`,
+    `  one.${af.name} = ${af.name};`,
+    `}`,
+  ]);
+  return [
+    `const map = ${mapper};`,
+    `sources.forEach((one) => {`,
+    `  one.${field.name} = ${setter};`,
+    ...auxiliaryFieldLines.flat(),
+    `});`,
+  ];
 }
