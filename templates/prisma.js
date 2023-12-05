@@ -70,19 +70,25 @@ function getSelfLoaderLines() /* Code[] */ {
     const loadedModelsLine = `const loadedModels = ${getSelfLoadedModels()};`;
     return [beforeLine, loadedModelsLine, afterLine];
   }
+  const { entityClass } = getThisEntityStrings();
   const auxiliaryFieldLines = auxiliaryFields.map((af) => [
     `const { ${af.name} } = keys[0];`,
     `if (${af.name} === undefined) {`,
-    `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
+    `  throw new Error('${entityClass}.${af.name} is undefined');`,
     `}`,
   ]);
-  const prismaModelsLine = `const prismaModels = ${getSelfLoadedModels()};`;
-  const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFields
+  const auxiliaryFieldNameList = auxiliaryFields
     .map((af) => af.name)
-    .join(", ")} }));`;
+    .join(", ");
+  const keysOmitterLines = [
+    `keys = keys.map(({ ${auxiliaryFieldNameList}, ...rest }) => rest);`,
+  ];
+  const prismaModelsLine = `const prismaModels = ${getSelfLoadedModels()};`;
+  const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFieldNameList} }));`;
   return [
     beforeLine,
     ...auxiliaryFieldLines.flat(),
+    ...keysOmitterLines.flat(),
     prismaModelsLine,
     loadedModelsLine,
     afterLine,
@@ -99,19 +105,20 @@ function getLoadConfigSetterLines(field) /* Code[] */ {
       `sources.forEach((one) => (one.${field.name} = ${setter}));`,
     ];
   }
+  const { entityClass } = getThisEntityStrings();
   const otherEntityName = toTitleCase(toPrimitiveTypeName(field.type));
   const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
     otherEntityName
   ).map((af) => [
-    `if (one.${af.name} === undefined) {`,
-    `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
-    `} else {`,
+    `  if (one.${af.name} === undefined) {`,
+    `    throw new Error('${entityClass}.${af.name} is undefined');`,
+    `  } else {`,
     isArrayField(field)
-      ? `  one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
+      ? `    one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
       : isNullableField(field)
-      ? `  if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; })`
-      : `  one.${field.name}.${af.name} = one.${af.name};`,
-    `}`,
+      ? `    if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; }`
+      : `    one.${field.name}.${af.name} = one.${af.name};`,
+    `  }`,
   ]);
   return [
     mapperLine,
