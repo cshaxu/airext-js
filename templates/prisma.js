@@ -92,18 +92,29 @@ function getSelfLoaderLines() /* Code[] */ {
 function getLoadConfigSetterLines(field) /* Code[] */ {
   const mapper = getLoadConfigTargetMapper(field);
   const setter = getLoadConfigSourceSetter(field);
+  const mapperLine = `const map = ${mapper};`;
+  if (!isEntityTypeField(field)) {
+    return [
+      mapperLine,
+      `sources.forEach((one) => (one.${field.name} = ${setter}));`,
+    ];
+  }
   const otherEntityName = toTitleCase(toPrimitiveTypeName(field.type));
   const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
     otherEntityName
   ).map((af) => [
-    `if (${af.name} === undefined) {`,
+    `if one.(${af.name} === undefined) {`,
     `  throw new Error('${schema.entityName}.${af.name} is undefined');`,
     `} else {`,
-    `  one.${af.name} = ${af.name};`,
+    isArrayField(field)
+      ? `  one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
+      : isNullableField(field)
+      ? `  if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; })`
+      : `  one.${field.name}.${af.name} = one.${af.name};`,
     `}`,
   ]);
   return [
-    `const map = ${mapper};`,
+    mapperLine,
     `sources.forEach((one) => {`,
     `  one.${field.name} = ${setter};`,
     ...auxiliaryFieldLines.flat(),
