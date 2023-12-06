@@ -1,5 +1,14 @@
 /* eslint-disable */
 
+/**
+ * CONFIG FIELDS
+ * prismaImport: string | undefined, import statement for prisma client
+ *
+ * YAML FLAGS
+ * - isPrisma: false | undefined, top-level flag, false to skip generating prisma wrappers
+ * - prismaLoader: boolean | undefined, field-level flag to decide whether to generate loader for the field
+ */
+
 /**********/
 /* QUERY  */
 /**********/
@@ -27,6 +36,10 @@ function isLoaderGeneratable(field) /* boolean */ {
   if (field.prismaLoader === false) {
     return false;
   }
+  const otherEntitySchema = schemaMap[toPrimitiveTypeName(field.type)];
+  if (!otherEntitySchema || otherEntitySchema.isPrisma === false) {
+    return false;
+  }
   return isEntityTypeField(field);
 }
 
@@ -41,11 +54,11 @@ function buildModelsLoader(entityName) /* Code */ {
   return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
 }
 
-function getSelfLoadedModels() /* Code */ {
+function getSelfModelsLoader() /* Code */ {
   return buildModelsLoader(getThisEntityStrings().entName);
 }
 
-function getTargetLoadedModels(field) /* Code */ {
+function getTargetModelsLoader(field) /* Code */ {
   if (!isLoaderGeneratable(field)) {
     return "[/* TODO: load associated models */]";
   }
@@ -54,12 +67,15 @@ function getTargetLoadedModels(field) /* Code */ {
 
 /* block */
 
-function getGlobalImports() /* Code[] */ {
-  const globalImports = JSON.parse(JSON.stringify(config.globalImports)) ?? [
-    "import prisma from 'TODO: specify globalImports in airent config';",
+function getBaseExtraImports() /* Code[] */ {
+  const requiredImports = [
+    "import { batchLoad } from 'airext';",
+    "import { Prisma } from '@prisma/client';",
   ];
-  globalImports.push("import { batchLoad } from 'airext';");
-  return globalImports;
+  const prismaImport =
+    JSON.parse(JSON.stringify(config.prismaImport)) ??
+    "import prisma from 'TODO: specify prismaImport in your airent config';";
+  return [...requiredImports, prismaImport];
 }
 
 function getSelfLoaderLines() /* Code[] */ {
@@ -67,7 +83,7 @@ function getSelfLoaderLines() /* Code[] */ {
   const beforeLine = `if (keys.length === 0) { return []; }`;
   const afterLine = `return (this as any).fromArray(loadedModels);`;
   if (auxiliaryFields.length === 0) {
-    const loadedModelsLine = `const loadedModels = ${getSelfLoadedModels()};`;
+    const loadedModelsLine = `const loadedModels = ${getSelfModelsLoader()};`;
     return [beforeLine, loadedModelsLine, afterLine];
   }
   const { entityClass } = getThisEntityStrings();
@@ -83,7 +99,7 @@ function getSelfLoaderLines() /* Code[] */ {
   const keysOmitterLines = [
     `keys = keys.map(({ ${auxiliaryFieldNameList}, ...rest }) => rest);`,
   ];
-  const prismaModelsLine = `const prismaModels = ${getSelfLoadedModels()};`;
+  const prismaModelsLine = `const prismaModels = ${getSelfModelsLoader()};`;
   const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFieldNameList} }));`;
   return [
     beforeLine,
@@ -126,5 +142,131 @@ function getLoadConfigSetterLines(field) /* Code[] */ {
     `  one.${field.name} = ${setter};`,
     ...auxiliaryFieldLines.flat(),
     `});`,
+  ];
+}
+
+function buildPrismaMethodSignatureLines(
+  prismaMethod,
+  typeSuffix
+) /* Code[] */ {
+  const { entName, baseClass } = getThisEntityStrings();
+  const prismaArgName = `Prisma.${entName}${toTitleCase(prismaMethod)}Args`;
+  const auxiliaryFieldLines = getAuxiliaryFields().map(
+    (af) => `  ${af.name}: ${af.type},`
+  );
+  return [
+    "",
+    `public static async ${prismaMethod}<`,
+    `  ENTITY extends ${baseClass},`,
+    `  T extends ${prismaArgName},`,
+    ">(",
+    `  this: EntityConstructor<${schema.modelName}, ENTITY>,`,
+    `  args: Prisma.SelectSubset<T, ${prismaArgName}>,`,
+    ...auxiliaryFieldLines,
+    `): Promise<ENTITY${typeSuffix}> {`,
+  ];
+}
+
+function buildPrismaManyMethodLines(prismaMethod) /* Code[] */ {
+  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  const auxiliaryFields = getAuxiliaryFields();
+  const beforeLines = buildPrismaMethodSignatureLines(prismaMethod, "[]");
+  const afterLines = ["  return (this as any).fromArray(models);", "}"];
+
+  const variableName = auxiliaryFields.length === 0 ? "models" : "prismaModels";
+  const prismaLoaderLine = `  const ${variableName} = await prisma.${prismaModelName}.${prismaMethod}(args)`;
+
+  if (auxiliaryFields.length === 0) {
+    return [...beforeLines, prismaLoaderLine, ...afterLines];
+  }
+
+  const auxiliaryFieldNameList = auxiliaryFields
+    .map((af) => af.name)
+    .join(", ");
+  return [
+    ...beforeLines,
+    prismaLoaderLine,
+    `  const models = ${variableName}.map((pm) => ({ ...pm, ${auxiliaryFieldNameList} }));`,
+    ...afterLines,
+  ];
+}
+
+function buildPrismaOneMethodLines(prismaMethod, isNullable) /* Code[] */ {
+  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  const auxiliaryFields = getAuxiliaryFields();
+
+  const beforeLines = buildPrismaMethodSignatureLines(
+    prismaMethod,
+    isNullable ? " | null" : ""
+  );
+  const afterLines = ["  return (this as any).fromOne(model);", "}"];
+
+  const variableName = auxiliaryFields.length === 0 ? "model" : "prismaModel";
+  const prismaLoaderLines = [
+    `  const ${variableName} = await prisma.${prismaModelName}.${prismaMethod}(args);`,
+    ...(isNullable
+      ? [`  if (${variableName} === null) {`, "    return null;", "  }"]
+      : []),
+  ];
+
+  if (auxiliaryFields.length === 0) {
+    return [...beforeLines, ...prismaLoaderLines, ...afterLines];
+  }
+
+  const auxiliaryFieldNameList = auxiliaryFields
+    .map((af) => af.name)
+    .join(", ");
+  return [
+    ...beforeLines,
+    ...prismaLoaderLines,
+    `  const model = { ...${variableName}, ${auxiliaryFieldNameList} };`,
+    ...afterLines,
+  ];
+}
+
+function buildPrismaNullableOneMethodLines(prismaMethod) /* Code[] */ {
+  return buildPrismaOneMethodLines(prismaMethod, true);
+}
+
+function buildPrismaNonNullableOneMethodLines(prismaMethod) /* Code[] */ {
+  return buildPrismaOneMethodLines(prismaMethod, false);
+}
+
+function buildPrismaPassThruMethodLines(prismaMethod) /* Code[] */ {
+  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  return [
+    "",
+    `public static ${prismaMethod} = prisma.${prismaModelName}.${prismaMethod};`,
+  ];
+}
+
+function getBaseExtraLines() /* Code[] */ {
+  if (schema.isPrisma === false) {
+    return [];
+  }
+  const nullableOneMethods = ["findUnique", "findFirst"];
+  const nonNullableOneMethods = [
+    "findUniqueOrThrow",
+    "findFirstOrThrow",
+    "upsert",
+    "create",
+    "update",
+    "delete",
+  ];
+  const passThruMethods = [
+    "createMany",
+    "updateMany",
+    "deleteMany",
+    "count",
+    "aggregate",
+    "groupBy",
+  ];
+  return [
+    "",
+    "/** prisma wrappers */",
+    ...buildPrismaManyMethodLines("findMany"),
+    ...nullableOneMethods.flatMap(buildPrismaNullableOneMethodLines),
+    ...nonNullableOneMethods.flatMap(buildPrismaNonNullableOneMethodLines),
+    ...passThruMethods.flatMap(buildPrismaPassThruMethodLines),
   ];
 }

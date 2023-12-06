@@ -19,7 +19,7 @@ function askQuestion(question) {
  *  @property {?string} airentPackage
  *  @property {string} schemaPath
  *  @property {string} outputPath
- *  @property {?string[]} [globalImports]
+ *  @property {?string} [prismaImport]
  *  @property {?string[]} [prologues]
  *  @property {?Template[]} [templates]
  */
@@ -58,7 +58,7 @@ async function main() {
 
     const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
     const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
-    const prismaGlobalImport = shouldEnablePrisma
+    const prismaImport = shouldEnablePrisma
       ? await askQuestion(
           "Statement to import 'prisma' (e.g. \"import prisma from '@/lib/prisma';\" or leave empty): "
         )
@@ -70,7 +70,8 @@ async function main() {
       isApiServiceEnabled
     );
 
-    const isApiClientEnabled = config.templates?.includes(AXIOS_TEMPLATE_PATH);
+    const existingTemplates = (config.templates ?? []).map((t) => t.name);
+    const isApiClientEnabled = existingTemplates.includes(AXIOS_TEMPLATE_PATH);
     const shouldEnableApiClient = await getShouldEnable(
       "Axios Api Client",
       isApiClientEnabled
@@ -88,9 +89,8 @@ async function main() {
     }
 
     if (shouldEnablePrisma) {
-      if (prismaGlobalImport.length) {
-        config.globalImports = config.globalImports ?? [];
-        config.globalImports.push(prismaGlobalImport);
+      if (prismaImport.length) {
+        config.prismaImport = prismaImport;
       }
       config.prologues = config.prologues ?? [];
       config.prologues.push(PRISMA_PROLOGUE_PATH);
