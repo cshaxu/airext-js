@@ -1,4 +1,4 @@
-<% if (schema.methods) { -%>
+<% if (!schema.internal && schema.api) { -%>
 import { <%= schema.strings.entityClass %> } from '../<%= schema.strings.entityPackage %>';
   <%_ schema.types.filter(isExternalType).forEach((type) => { -%>
 import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPackage %>';
@@ -6,85 +6,81 @@ import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPack
   <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
 import { <%= type.strings.typeName %> } from './<%= schema.strings.typePackage %>';
   <%_ }); -%>
-  <%_ if (hasGetOne()) { -%>
+  <%_ if (hasInternalGetOne()) { -%>
 import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
   <%_ } -%>
-  <%_ if (hasGetMany()) { -%>
-import { <%= getGetManyQueryName() %> } from '<%= schema.methods.getMany.import %>';
-  <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
-import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import %>';
-  <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
-import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
+  <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
+import {
+    <%_ if (hasGetMany()) { -%>
+  <%= getGetManyQueryName() %>,
+    <%_ } -%>
+    <%_ if (hasCreateOne()) { -%>
+  <%= getCreateOneBodyName() %>,
+    <%_ } -%>
+    <%_ if (hasUpdateOne()) { -%>
+  <%= getUpdateOneBodyName() %>,
+    <%_ } -%>
+} from '<%= schema.api.request.import %>';
   <%_ } -%>
 
   <%_ if (schema.deprecated) { -%>
 /** @deprecated */
   <%_ } -%>
 export abstract class <%= `${getServiceName()}Base` %> {
-  <%_ if (schema.service?.fields?.length) { -%>
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+  <%_ if (schema.api.service.fields?.length) { -%>
+    <%_ schema.api.service.fields.forEach((field) => { -%>
   protected <%= field.name %>: <%= field.type %>;
     <%_ }); -%>
 
   public constructor(
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ schema.api.service.fields.forEach((field) => { -%>
     <%= field.name %>: <%= field.type %>,
     <%_ }); -%>
   ) {
-    <%_ (schema.service.fields ?? []).forEach((field) => { -%>
+    <%_ schema.api.service.fields.forEach((field) => { -%>
     this.<%= field.name %> = <%= field.name %>;
     <%_ }); -%>
   }
   <%_ } -%>
   <%_ if (hasGetMany()) { -%>
-    <%_ if (hasExternalGetMany()) { -%>
 
-  public async beforeGetMany(_query: <%= getGetManyQueryName() %>): Promise<void> {}
+  public async beforeGetMany(query: <%= getGetManyQueryName() %>): Promise<void> {}
 
-  public async afterGetMany(_many: <%= schema.strings.entityClass %>[], _query: <%= getGetManyQueryName() %>): Promise<void> {}
-    <%_ } -%>
+  public async afterGetMany(many: <%= schema.strings.entityClass %>[], query: <%= getGetManyQueryName() %>): Promise<void> {}
 
   public abstract getMany(query: <%= getGetManyQueryName() %>): Promise<<%= schema.strings.entityClass %>[]>;
   <%_ } -%>
   <%_ if (hasGetOne()) { -%>
-    <%_ if (hasExternalGetOne()) { -%>
 
-  public async beforeGetOne(_params: <%= getGetOneParamsName() %>): Promise<void> {}
-
-  public async afterGetOne(_one: <%= schema.strings.entityClass %>, _params: <%= getGetOneParamsName() %>): Promise<void> {}
-    <%_ } -%>
+  public async beforeGetOne(params: <%= getGetOneParamsName() %>): Promise<void> {}
+  
+  public async afterGetOne(one: <%= schema.strings.entityClass %>, params: <%= getGetOneParamsName() %>): Promise<void> {}
+  <%_ } -%>
+  <%_ if (hasInternalGetOne()) { -%>
 
   public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasCreateOne()) { -%>
-    <%_ if (hasExternalCreateOne()) { -%>
 
-  public async beforeCreateOne(_body: <%= getCreateOneBodyName() %>): Promise<void> {}
+  public async beforeCreateOne(body: <%= getCreateOneBodyName() %>): Promise<void> {}
 
-  public async afterCreateOne(_createdOne: <%= schema.strings.entityClass %>, _body: <%= getCreateOneBodyName() %>): Promise<void> {}
-    <%_ } -%>
+  public async afterCreateOne(createdOne: <%= schema.strings.entityClass %>, body: <%= getCreateOneBodyName() %>): Promise<void> {}
 
   public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasUpdateOne()) { -%>
-    <%_ if (hasExternalUpdateOne()) { -%>
 
-  public async beforeUpdateOne(_one: <%= schema.strings.entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+  public async beforeUpdateOne(one: <%= schema.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<void> {}
 
-  public async afterUpdateOne(_updatedOne: <%= schema.strings.entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
-    <%_ } -%>
+  public async afterUpdateOne(updatedOne: <%= schema.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<void> {}
 
   public abstract updateOne(one: <%= schema.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasDeleteOne()) { -%>
-    <%_ if (hasExternalDeleteOne()) { -%>
 
-  public async beforeDeleteOne(_one: <%= schema.strings.entityClass %>): Promise<void> {}
+  public async beforeDeleteOne(one: <%= schema.strings.entityClass %>): Promise<void> {}
 
-  public async afterDeleteOne(_deletedOne: <%= schema.strings.entityClass %>): Promise<void> {}
-    <%_ } -%>
+  public async afterDeleteOne(deletedOne: <%= schema.strings.entityClass %>): Promise<void> {}
 
   public abstract deleteOne(one: <%= schema.strings.entityClass %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>

@@ -1,6 +1,14 @@
 /* eslint-disable */
 
-// strings
+/**
+ * SCHEMA FLAGS
+ * - internal: false | undefined, top-level flag, false to skip generating ManyResponse/OneResponse
+ * - api: object | undefined, top-level field, defined to generate api entrypoints, service methods and axios sdks
+ */
+
+/**********/
+/* STRING */
+/**********/
 
 function getApiPackageName() {
   const prefix = toKababCase(toTitleCase(schema.entityName));
@@ -48,7 +56,9 @@ function getUpdateOneBodyName() {
   return `UpdateOne${toTitleCase(schema.entityName)}Body`;
 }
 
-// booleans
+/***********/
+/* BOOLEAN */
+/***********/
 
 function isCursorField(field) {
   return !!field.cursor && isExternalField(field);
@@ -59,75 +69,30 @@ function isDateTypeField(field) {
   return fieldTypeName === "Date";
 }
 
+function hasApiMethod(methodName) {
+  return !!schema.api?.methods?.includes(methodName);
+}
+
 function hasGetMany() {
-  const method = schema.methods?.getMany;
-  return !!method && Object.keys(method).length > 0 && !!method.import?.length;
+  return hasApiMethod("getMany");
 }
 
 function hasGetOne() {
-  const method = schema.methods?.getOne;
-  return !!method && Object.keys(method).length > 0 && !!method.keys?.length;
+  return hasApiMethod("getOne");
 }
 
 function hasCreateOne() {
-  const method = schema.methods?.create;
-  return (
-    hasGetOne() &&
-    !!method &&
-    Object.keys(method).length > 0 &&
-    !!method.import?.length
-  );
+  return hasApiMethod("create");
 }
 
 function hasUpdateOne() {
-  const method = schema.methods?.update;
-  return (
-    hasGetOne() &&
-    !!method &&
-    Object.keys(method).length > 0 &&
-    !!method.import?.length
-  );
+  return hasApiMethod("update");
 }
 
 function hasDeleteOne() {
-  const method = schema.methods?.delete;
-  return (
-    hasGetOne() &&
-    !!method &&
-    Object.keys(method).length > 0 &&
-    !!method.import?.length
-  );
+  return hasApiMethod("delete");
 }
 
-function hasExternalGetMany() {
-  return !schema.internal && hasGetMany() && !schema.methods.getMany.internal;
-}
-
-function hasExternalGetOne() {
-  return !schema.internal && hasGetOne() && !schema.methods.getOne.internal;
-}
-
-function hasExternalCreateOne() {
-  return !schema.internal && hasCreateOne() && !schema.methods.create.internal;
-}
-
-function hasExternalUpdateOne() {
-  return !schema.internal && hasUpdateOne() && !schema.methods.update.internal;
-}
-
-function hasExternalDeleteOne() {
-  return !schema.internal && hasDeleteOne() && !schema.methods.delete.internal;
-}
-
-function hasManyResponse() {
-  return hasExternalGetMany();
-}
-
-function hasOneResponse() {
-  return (
-    hasExternalGetOne() ||
-    hasExternalCreateOne() ||
-    hasExternalUpdateOne() ||
-    hasExternalDeleteOne()
-  );
+function hasInternalGetOne() {
+  return hasGetOne() || hasCreateOne() || hasUpdateOne() || hasDeleteOne();
 }

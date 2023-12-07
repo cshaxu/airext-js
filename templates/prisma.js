@@ -149,17 +149,16 @@ function buildPrismaMethodSignatureLines(
   prismaMethod,
   typeSuffix
 ) /* Code[] */ {
-  const { baseClass } = schema.strings;
-  const prismaArgName = `Prisma.${toTitleCase(schema.entityName)}${toTitleCase(
-    prismaMethod
-  )}Args`;
+  const { entityName, strings } = schema;
+  const entName = toTitleCase(entityName);
+  const prismaArgName = `Prisma.${entName}${toTitleCase(prismaMethod)}Args`;
   const auxiliaryFieldLines = getAuxiliaryFields().map(
     (af) => `  ${af.name}: ${af.type},`
   );
   return [
     "",
     `public static async ${prismaMethod}<`,
-    `  ENTITY extends ${baseClass},`,
+    `  ENTITY extends ${strings.baseClass},`,
     `  T extends ${prismaArgName},`,
     ">(",
     `  this: EntityConstructor<${schema.modelName}, ENTITY>,`,
