@@ -1,10 +1,10 @@
 <% if (schema.methods) { -%>
-import { <%= getThisEntityStrings().entityClass %> } from '../<%= getThisEntityStrings().entityPackage %>';
+import { <%= schema.strings.entityClass %> } from '../<%= schema.strings.entityPackage %>';
   <%_ schema.types.filter(isExternalType).forEach((type) => { -%>
-import { <%= getTypeStrings(type).externalClass %> } from '<%= getTypeStrings(type).externalPackage %>';
+import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPackage %>';
   <%_ }); -%>
   <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
-import { <%= getTypeStrings(type).typeName %> } from './<%= getThisEntityStrings().typePackage %>';
+import { <%= type.strings.typeName %> } from './<%= schema.strings.typePackage %>';
   <%_ }); -%>
   <%_ if (hasGetOne()) { -%>
 import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
@@ -43,50 +43,50 @@ export abstract class <%= `${getServiceName()}Base` %> {
 
   public async beforeGetMany(_query: <%= getGetManyQueryName() %>): Promise<void> {}
 
-  public async afterGetMany(_many: <%= getThisEntityStrings().entityClass %>[], _query: <%= getGetManyQueryName() %>): Promise<void> {}
+  public async afterGetMany(_many: <%= schema.strings.entityClass %>[], _query: <%= getGetManyQueryName() %>): Promise<void> {}
     <%_ } -%>
 
-  public abstract getMany(query: <%= getGetManyQueryName() %>): Promise<<%= getThisEntityStrings().entityClass %>[]>;
+  public abstract getMany(query: <%= getGetManyQueryName() %>): Promise<<%= schema.strings.entityClass %>[]>;
   <%_ } -%>
   <%_ if (hasGetOne()) { -%>
     <%_ if (hasExternalGetOne()) { -%>
 
   public async beforeGetOne(_params: <%= getGetOneParamsName() %>): Promise<void> {}
 
-  public async afterGetOne(_one: <%= getThisEntityStrings().entityClass %>, _params: <%= getGetOneParamsName() %>): Promise<void> {}
+  public async afterGetOne(_one: <%= schema.strings.entityClass %>, _params: <%= getGetOneParamsName() %>): Promise<void> {}
     <%_ } -%>
 
-  public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasCreateOne()) { -%>
     <%_ if (hasExternalCreateOne()) { -%>
 
   public async beforeCreateOne(_body: <%= getCreateOneBodyName() %>): Promise<void> {}
 
-  public async afterCreateOne(_createdOne: <%= getThisEntityStrings().entityClass %>, _body: <%= getCreateOneBodyName() %>): Promise<void> {}
+  public async afterCreateOne(_createdOne: <%= schema.strings.entityClass %>, _body: <%= getCreateOneBodyName() %>): Promise<void> {}
     <%_ } -%>
 
-  public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasUpdateOne()) { -%>
     <%_ if (hasExternalUpdateOne()) { -%>
 
-  public async beforeUpdateOne(_one: <%= getThisEntityStrings().entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+  public async beforeUpdateOne(_one: <%= schema.strings.entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
 
-  public async afterUpdateOne(_updatedOne: <%= getThisEntityStrings().entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+  public async afterUpdateOne(_updatedOne: <%= schema.strings.entityClass %>, _body: <%= getUpdateOneBodyName() %>): Promise<void> {}
     <%_ } -%>
 
-  public abstract updateOne(one: <%= getThisEntityStrings().entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract updateOne(one: <%= schema.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
   <%_ if (hasDeleteOne()) { -%>
     <%_ if (hasExternalDeleteOne()) { -%>
 
-  public async beforeDeleteOne(_one: <%= getThisEntityStrings().entityClass %>): Promise<void> {}
+  public async beforeDeleteOne(_one: <%= schema.strings.entityClass %>): Promise<void> {}
 
-  public async afterDeleteOne(_deletedOne: <%= getThisEntityStrings().entityClass %>): Promise<void> {}
+  public async afterDeleteOne(_deletedOne: <%= schema.strings.entityClass %>): Promise<void> {}
     <%_ } -%>
 
-  public abstract deleteOne(one: <%= getThisEntityStrings().entityClass %>): Promise<<%= getThisEntityStrings().entityClass %>>;
+  public abstract deleteOne(one: <%= schema.strings.entityClass %>): Promise<<%= schema.strings.entityClass %>>;
   <%_ } -%>
 }
 <% } -%>

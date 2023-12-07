@@ -55,7 +55,7 @@ function buildModelsLoader(entityName) /* Code */ {
 }
 
 function getSelfModelsLoader() /* Code */ {
-  return buildModelsLoader(getThisEntityStrings().entName);
+  return buildModelsLoader(toTitleCase(schema.entityName));
 }
 
 function getTargetModelsLoader(field) /* Code */ {
@@ -86,7 +86,7 @@ function getSelfLoaderLines() /* Code[] */ {
     const loadedModelsLine = `const loadedModels = ${getSelfModelsLoader()};`;
     return [beforeLine, loadedModelsLine, afterLine];
   }
-  const { entityClass } = getThisEntityStrings();
+  const { entityClass } = schema.strings;
   const auxiliaryFieldLines = auxiliaryFields.map((af) => [
     `const { ${af.name} } = keys[0];`,
     `if (${af.name} === undefined) {`,
@@ -121,7 +121,7 @@ function getLoadConfigSetterLines(field) /* Code[] */ {
       `sources.forEach((one) => (one.${field.name} = ${setter}));`,
     ];
   }
-  const { entityClass } = getThisEntityStrings();
+  const { entityClass } = schema.strings;
   const otherEntityName = toTitleCase(toPrimitiveTypeName(field.type));
   const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
     otherEntityName
@@ -149,8 +149,10 @@ function buildPrismaMethodSignatureLines(
   prismaMethod,
   typeSuffix
 ) /* Code[] */ {
-  const { entName, baseClass } = getThisEntityStrings();
-  const prismaArgName = `Prisma.${entName}${toTitleCase(prismaMethod)}Args`;
+  const { baseClass } = schema.strings;
+  const prismaArgName = `Prisma.${toTitleCase(schema.entityName)}${toTitleCase(
+    prismaMethod
+  )}Args`;
   const auxiliaryFieldLines = getAuxiliaryFields().map(
     (af) => `  ${af.name}: ${af.type},`
   );
@@ -168,7 +170,7 @@ function buildPrismaMethodSignatureLines(
 }
 
 function buildPrismaManyMethodLines(prismaMethod) /* Code[] */ {
-  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  const prismaModelName = toCamelCase(schema.entityName);
   const auxiliaryFields = getAuxiliaryFields();
   const beforeLines = buildPrismaMethodSignatureLines(prismaMethod, "[]");
   const afterLines = ["  return (this as any).fromArray(models);", "}"];
@@ -192,7 +194,7 @@ function buildPrismaManyMethodLines(prismaMethod) /* Code[] */ {
 }
 
 function buildPrismaOneMethodLines(prismaMethod, isNullable) /* Code[] */ {
-  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  const prismaModelName = toCamelCase(schema.entityName);
   const auxiliaryFields = getAuxiliaryFields();
 
   const beforeLines = buildPrismaMethodSignatureLines(
@@ -233,7 +235,7 @@ function buildPrismaNonNullableOneMethodLines(prismaMethod) /* Code[] */ {
 }
 
 function buildPrismaPassThruMethodLines(prismaMethod) /* Code[] */ {
-  const prismaModelName = toCamelCase(getThisEntityStrings().entName);
+  const prismaModelName = toCamelCase(schema.entityName);
   return [
     "",
     `public static ${prismaMethod} = prisma.${prismaModelName}.${prismaMethod};`,

@@ -3,53 +3,49 @@
 // strings
 
 function getApiPackageName() {
-  const prefix = toKababCase(getThisEntityStrings().entName);
+  const prefix = toKababCase(toTitleCase(schema.entityName));
   const suffix = getModuleSuffix();
   return `${prefix}-api${suffix}`;
 }
 
-function getPluralEntityName() {
-  return pluralize(getThisEntityStrings().entName);
-}
-
 function getOneEntityVarName() {
-  return toCamelCase(getThisEntityStrings().entName);
+  return toCamelCase(schema.entityName);
 }
 
 function getManyEntitiesVarName() {
-  return toCamelCase(getPluralEntityName());
+  return toCamelCase(pluralize(schema.entityName));
 }
 
 function getCursorName() {
-  return `Many${getPluralEntityName()}Cursor`;
+  return `Many${toTitleCase(pluralize(schema.entityName))}Cursor`;
 }
 
 function getManyResponseName() {
-  return `Many${getPluralEntityName()}Response`;
+  return `Many${toTitleCase(pluralize(schema.entityName))}Response`;
 }
 
 function getOneResponseName() {
-  return `One${getThisEntityStrings().entName}Response`;
+  return `One${toTitleCase(schema.entityName)}Response`;
 }
 
 function getServiceName() {
-  return `${getThisEntityStrings().entName}Service`;
+  return `${toTitleCase(schema.entityName)}Service`;
 }
 
 function getGetManyQueryName() {
-  return `GetMany${getPluralEntityName()}Query`;
+  return `GetMany${toTitleCase(pluralize(schema.entityName))}Query`;
 }
 
 function getGetOneParamsName() {
-  return `GetOne${getThisEntityStrings().entName}Params`;
+  return `GetOne${toTitleCase(schema.entityName)}Params`;
 }
 
 function getCreateOneBodyName() {
-  return `CreateOne${getThisEntityStrings().entName}Body`;
+  return `CreateOne${toTitleCase(schema.entityName)}Body`;
 }
 
 function getUpdateOneBodyName() {
-  return `UpdateOne${getThisEntityStrings().entName}Body`;
+  return `UpdateOne${toTitleCase(schema.entityName)}Body`;
 }
 
 // booleans

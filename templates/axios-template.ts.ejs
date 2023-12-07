@@ -1,6 +1,6 @@
 <%
 function getApiBasePath() {
-  const pluralized = pluralize(getThisEntityStrings().entName);
+  const pluralized = pluralize(toTitleCase(schema.entityName));
   const kababCased = toKababCase(toCamelCase(pluralized));
   return `${config.apiBasePath}/${kababCased}`;
 }
@@ -21,8 +21,8 @@ function presentField(field) {
   return onePresenter;
 }
 -%>
-import { <%= getThisEntityStrings().responseClass %> } from './<%= getThisEntityStrings().typePackage %>';
-<% schema.types.filter(isEntityType).filter((type) => type.name !== getThisEntityStrings().entName).forEach((type) => { -%>
+import { <%= schema.strings.responseClass %> } from './<%= schema.strings.typePackage %>';
+<% schema.types.filter(isEntityType).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
 import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
 <% }); -%>
 <% if (hasManyResponse() || hasOneResponse()) { -%>
@@ -48,7 +48,7 @@ import { <%= getCreateOneBodyName() %> } from '<%= schema.methods.create.import 
 import { <%= getUpdateOneBodyName() %> } from '<%= schema.methods.update.import %>';
 <%_ } -%>
 
-function present(one: any): <%= getThisEntityStrings().responseClass %> {
+function present(one: any): <%= schema.strings.responseClass %> {
   return {
     ...one,
 <% schema.fields.filter(isExternalField).filter((field) => isDateTypeField(field) || isEntityTypeField(field)).forEach((field) => { -%>
@@ -142,7 +142,7 @@ async function deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getO
 <% if (schema.deprecated) { -%>
 /** @deprecated */
 <% } -%>
-const <%= `${getThisEntityStrings().entName}Axios` %> = {
+const <%= `${toTitleCase(schema.entityName)}Axios` %> = {
   present,
 <% if (hasManyResponse()) { -%>
   presentManyResponse,
@@ -182,4 +182,4 @@ const <%= `${getThisEntityStrings().entName}Axios` %> = {
 <% } -%>
 };
 
-export default <%= `${getThisEntityStrings().entName}Axios` %>;
+export default <%= `${toTitleCase(schema.entityName)}Axios` %>;
