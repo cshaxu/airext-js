@@ -1,0 +1,32 @@
+entity: User
+fields:
+  - id: 1
+    name: isAdmin
+    type: boolean
+    strategy: computed
+    internal: true
+  - id: 2
+    name: chatUsers
+    type: chatUser[]
+    strategy: association
+    deprecated: true
+    sourceFields:
+      - id
+    targetFields:
+      - userId
+  - id: 3
+    name: messages
+    type: Message[]
+    strategy: association
+    targetFields:
+      - userId
+    internal: true
+  - id: 4
+    name: firstMessage
+    type: Message | null
+    strategy: computedAsync
+    deprecated: true
+  - id: 5
+    name: hasAnyMessage
+    type: boolean
+    strategy: association

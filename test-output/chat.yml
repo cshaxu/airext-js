@@ -1,0 +1,39 @@
+entity: Chat
+model: ChatModel
+types:
+  - name: ChatModel
+    define: '{ [key: string]: any }'
+fields:
+  - id: 1
+    name: id
+    type: string
+    strategy: primitive
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: updatedAt
+    type: Date
+    strategy: primitive
+  - id: 4
+    name: deletedAt
+    type: Date | null
+    strategy: primitive
+  - id: 5
+    name: chatUsers
+    type: chatUser[]
+    strategy: association
+    deprecated: true
+    sourceFields:
+      - id
+    targetFields:
+      - chatId
+  - id: 6
+    name: messages
+    type: Message[]
+    strategy: association
+    sourceFields:
+      - id
+    targetFields:
+      - chatId

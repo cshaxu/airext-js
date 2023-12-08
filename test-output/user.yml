@@ -1,0 +1,69 @@
+entity: User
+model: PrismaUser
+fields:
+  - id: 1
+    name: id
+    type: string
+    strategy: primitive
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: updatedAt
+    type: Date
+    strategy: primitive
+  - id: 4
+    name: email
+    type: string
+    strategy: primitive
+  - id: 5
+    name: emailVerified
+    type: Date | null
+    strategy: primitive
+  - id: 6
+    name: firstName
+    type: string | null
+    strategy: primitive
+  - id: 7
+    name: imageUrl
+    type: string | null
+    strategy: primitive
+  - id: 8
+    name: lastName
+    type: string | null
+    strategy: primitive
+  - id: 1
+    name: isAdmin
+    type: boolean
+    strategy: computed
+    internal: true
+  - id: 2
+    name: chatUsers
+    type: chatUser[]
+    strategy: association
+    deprecated: true
+    sourceFields:
+      - id
+    targetFields:
+      - userId
+  - id: 3
+    name: messages
+    type: Message[]
+    strategy: association
+    targetFields:
+      - userId
+    internal: true
+  - id: 4
+    name: firstMessage
+    type: Message | null
+    strategy: computedAsync
+    deprecated: true
+  - id: 5
+    name: hasAnyMessage
+    type: boolean
+    strategy: association
+types:
+  - name: PrismaUser
+    aliasOf: User
+    import: '@prisma/client'

@@ -1,0 +1,97 @@
+entity: Message
+model: MessageModel
+skipSelfLoader: true
+types:
+  - name: PrismaMessage
+    aliasOf: Message
+    import: '@prisma/client'
+  - name: PrismaMessageType
+    aliasOf: MessageType
+    import: '@prisma/client'
+  - name: PrismaJsonValue
+    aliasOf: JsonValue
+    import: '@prisma/client/runtime/library'
+  - name: MessageModel
+    define: 'PrismaMessage & { rc?: RequestContext }'
+  - name: Attachment
+    import: '@/types/message'
+  - name: SenderType
+    enum: '{ USER = "USER", CHATBOT = "CHATBOT" }'
+fields:
+  - id: 1
+    name: id
+    type: string
+    strategy: primitive
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: chatId
+    type: string
+    strategy: primitive
+  - id: 4
+    name: userId
+    type: string
+    strategy: primitive
+  - id: 5
+    name: type
+    type: PrismaMessageType
+    strategy: primitive
+  - id: 6
+    name: content
+    type: string | null
+    strategy: primitive
+  - id: 7
+    name: attachment
+    type: PrismaJsonValue | null
+    strategy: primitive
+  - id: 8
+    name: parentMessageId
+    type: string | null
+    strategy: primitive
+  - id: 1
+    name: derivedChatId
+    type: string | null
+    strategy: computed
+  - id: 2
+    name: chat
+    type: Chat
+    strategy: association
+    sourceFields:
+      - derivedChatId
+    targetFields:
+      - id
+  - id: 3
+    name: user
+    type: User | null
+    strategy: association
+    sourceFields:
+      - userId
+    targetFields:
+      - id
+  - id: 4
+    name: hasContent
+    type: boolean
+    strategy: computed
+    internal: true
+  - id: 5
+    name: parentMessage
+    type: Message | null
+    strategy: association
+    sourceFields:
+      - parentMessageId
+    targetFields:
+      - id
+  - id: 6
+    name: mentorId
+    type: string | null
+    strategy: computed
+  - id: 7
+    name: mentor
+    type: User | null
+    strategy: association
+    sourceFields:
+      - mentorId
+    targetFields:
+      - id
