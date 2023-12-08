@@ -4,7 +4,8 @@
   "description": "Airent Extension",
   "main": "./lib/index.js",
   "bin": {
-    "airext": "./bin/index.js"
+    "airext": "./bin/index.js",
+    "airext-prisma": "./bin/prisma.js"
   },
   "scripts": {
     "build": "rm -rf ./lib && tsc -p tsconfig.json"
@@ -34,13 +35,14 @@
     "lib",
     "templates"
   ],
+  "dependencies": {
+    "@dbml/core": "^3.0.0",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21"
+  },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.12",
+    "@types/lodash": "^4.14.202",
     "@types/node": "^20.10.1",
     "typescript": "^5.3.2"
-  },
-  "dependencies": {
-    "@types/lodash": "^4.14.202",
-    "lodash": "^4.17.21"
   }
 }

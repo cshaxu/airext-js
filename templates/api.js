@@ -61,7 +61,7 @@ function getUpdateOneBodyName() {
 /***********/
 
 function isCursorField(field) {
-  return !!field.cursor && isExternalField(field);
+  return !!schema.api?.cursors?.includes(field.name) && isExternalField(field);
 }
 
 function isDateTypeField(field) {

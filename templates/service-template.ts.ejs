@@ -4,7 +4,7 @@ import { <%= schema.strings.entityClass %> } from '../<%= schema.strings.entityP
 import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPackage %>';
   <%_ }); -%>
   <%_ schema.types.filter(isInternalType).forEach((type) => { -%>
-import { <%= type.strings.typeName %> } from './<%= schema.strings.typePackage %>';
+import { <%= type.name %> } from './<%= schema.strings.typePackage %>';
   <%_ }); -%>
   <%_ if (hasInternalGetOne()) { -%>
 import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';

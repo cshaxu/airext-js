@@ -1,0 +1,56 @@
+entity: Message
+model: MessageModel
+skipSelfLoader: true
+types:
+  - name: MessageModel
+    define: "PrismaMessage & { rc?: RequestContext }"
+  - name: Attachment
+    import: "@/types/message"
+  - name: SenderType
+    enum: '{ USER = "USER", CHATBOT = "CHATBOT" }'
+fields:
+  - id: 1
+    name: derivedChatId
+    type: string | null
+    strategy: computed
+  - id: 2
+    name: chat
+    type: Chat
+    strategy: association
+    sourceFields:
+      - derivedChatId
+    targetFields:
+      - id
+  - id: 3
+    name: user
+    type: User | null
+    strategy: association
+    sourceFields:
+      - userId
+    targetFields:
+      - id
+  - id: 4
+    name: hasContent
+    type: boolean
+    strategy: computed
+    internal: true
+  - id: 5
+    name: parentMessage
+    type: Message | null
+    strategy: association
+    sourceFields:
+      - parentMessageId
+    targetFields:
+      - id
+  - id: 6
+    name: mentorId
+    type: string | null
+    strategy: computed
+  - id: 7
+    name: mentor
+    type: User | null
+    strategy: association
+    sourceFields:
+      - mentorId
+    targetFields:
+      - id
