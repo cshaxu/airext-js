@@ -1,38 +1,5 @@
 entity: User
-model: PrismaUser
 fields:
-  - id: 1
-    name: id
-    type: string
-    strategy: primitive
-  - id: 2
-    name: createdAt
-    type: Date
-    strategy: primitive
-  - id: 3
-    name: updatedAt
-    type: Date
-    strategy: primitive
-  - id: 4
-    name: email
-    type: string
-    strategy: primitive
-  - id: 5
-    name: emailVerified
-    type: Date | null
-    strategy: primitive
-  - id: 6
-    name: firstName
-    type: string | null
-    strategy: primitive
-  - id: 7
-    name: imageUrl
-    type: string | null
-    strategy: primitive
-  - id: 8
-    name: lastName
-    type: string | null
-    strategy: primitive
   - id: 1
     name: isAdmin
     type: boolean
@@ -63,7 +30,3 @@ fields:
     name: hasAnyMessage
     type: boolean
     strategy: association
-types:
-  - name: PrismaUser
-    aliasOf: User
-    import: '@prisma/client'

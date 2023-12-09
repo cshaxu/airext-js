@@ -1,0 +1,43 @@
+entity: File
+model: PrismaFile
+fields:
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: size
+    type: number
+    strategy: primitive
+  - id: 4
+    name: type
+    type: PrismaFileType
+    strategy: primitive
+  - id: 5
+    name: pages
+    type: FilePage[]
+    strategy: association
+    sourceFields:
+      - id
+    targetFields:
+      - fileId
+  - id: 6
+    name: chunks
+    type: FilePageChunk[]
+    strategy: association
+    sourceFields:
+      - id
+    targetFields:
+      - fileId
+  - id: 1
+    name: id
+    type: string
+    internal: true
+    strategy: primitive
+types:
+  - name: PrismaFile
+    aliasOf: File
+    import: '@prisma/client'
+  - name: PrismaFileType
+    aliasOf: FileType
+    import: '@prisma/client'

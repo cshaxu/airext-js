@@ -1,0 +1,52 @@
+entity: FilePage
+model: PrismaFilePage
+types:
+  - name: PrismaFilePage
+    aliasOf: FilePage
+    import: '@prisma/client'
+  - name: PrismaJsonValue
+    aliasOf: JsonValue
+    import: '@prisma/client/runtime/library'
+fields:
+  - id: 1
+    name: id
+    type: string
+    strategy: primitive
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: updatedAt
+    type: Date
+    strategy: primitive
+  - id: 4
+    name: fileId
+    type: string
+    strategy: primitive
+  - id: 5
+    name: pageId
+    type: number
+    strategy: primitive
+  - id: 6
+    name: lines
+    type: PrismaJsonValue
+    strategy: primitive
+  - id: 7
+    name: file
+    type: File
+    strategy: association
+    sourceFields:
+      - fileId
+    targetFields:
+      - id
+  - id: 8
+    name: chunks
+    type: FilePageChunk[]
+    strategy: association
+    sourceFields:
+      - fileId
+      - pageId
+    targetFields:
+      - fileId
+      - pageId

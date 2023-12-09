@@ -1,0 +1,57 @@
+entity: FilePageChunk
+model: PrismaFilePageChunk
+types:
+  - name: PrismaFilePageChunk
+    aliasOf: FilePageChunk
+    import: '@prisma/client'
+fields:
+  - id: 1
+    name: id
+    type: string
+    strategy: primitive
+  - id: 2
+    name: createdAt
+    type: Date
+    strategy: primitive
+  - id: 3
+    name: updatedAt
+    type: Date
+    strategy: primitive
+  - id: 4
+    name: fileId
+    type: string
+    strategy: primitive
+  - id: 5
+    name: pageId
+    type: number
+    strategy: primitive
+  - id: 6
+    name: chunkId
+    type: number
+    strategy: primitive
+  - id: 7
+    name: startLineId
+    type: number
+    strategy: primitive
+  - id: 8
+    name: endLineId
+    type: number
+    strategy: primitive
+  - id: 9
+    name: file
+    type: File
+    strategy: association
+    sourceFields:
+      - fileId
+    targetFields:
+      - id
+  - id: 10
+    name: page
+    type: FilePage
+    strategy: association
+    sourceFields:
+      - fileId
+      - pageId
+    targetFields:
+      - fileId
+      - pageId

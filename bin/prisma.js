@@ -83,14 +83,26 @@ async function loadDbml(dbmlFilePath, isVerbose) {
   return new Parser().parse(imported, "dbml");
 }
 
-function buildTableSchema(table, enums) {
+const NATIVE_PRISMA_TYPES = {
+  String: "string",
+  Boolean: "boolean",
+  Int: "number",
+  BigInt: "bigint",
+  Float: "number",
+  Decimal: "number",
+  DateTime: "Date",
+  Bytes: "Buffer",
+};
+
+function buildTableSchema(table, enums, refs) {
+  const { name: entity } = table;
   const schema = {
-    entity: table.name,
-    model: `Prisma${table.name}`,
+    entity,
+    model: `Prisma${entity}`,
     types: [
       {
-        name: `Prisma${table.name}`,
-        aliasOf: table.name,
+        name: `Prisma${entity}`,
+        aliasOf: entity,
         import: "@prisma/client",
       },
     ],
@@ -98,63 +110,79 @@ function buildTableSchema(table, enums) {
   };
   const existingTypeNames = new Set();
   table.fields.forEach((rawField, index) => {
-    const field = { id: index + 1, name: rawField.name };
-    const rawTypeName = rawField.type.type_name;
+    const { name, type } = rawField;
+    const { type_name: rawTypeName } = type;
+    const field = { id: index + 1, name };
     const typeSuffix = rawField.pk || rawField.not_null ? "" : " | null";
-    switch (rawTypeName) {
-      case "String":
-        field.type = `string${typeSuffix}`;
-        break;
-      case "Boolean":
-        field.type = `boolean${typeSuffix}`;
-        break;
-      case "Int":
-        field.type = `number${typeSuffix}`;
-        break;
-      case "BigInt":
-        field.type = `bigint${typeSuffix}`;
-        break;
-      case "Float":
-        field.type = `number${typeSuffix}`;
-        break;
-      case "Decimal":
-        field.type = `number${typeSuffix}`;
-        break;
-      case "DateTime":
-        field.type = `Date${typeSuffix}`;
-        break;
-      case "Bytes":
-        field.type = `Buffer${typeSuffix}`;
-        break;
-      case "Json":
-        field.type = `PrismaJsonValue${typeSuffix}`;
-        if (!existingTypeNames.has(rawTypeName)) {
-          schema.types.push({
-            name: "PrismaJsonValue",
-            aliasOf: "JsonValue",
-            import: "@prisma/client/runtime/library",
-          });
-          existingTypeNames.add(rawTypeName);
+    const nativeType = NATIVE_PRISMA_TYPES[rawTypeName];
+    if (nativeType) {
+      field.type = `${nativeType}${typeSuffix}`;
+      field.strategy = "primitive";
+    } else if (rawTypeName === "Json") {
+      field.type = `PrismaJsonValue${typeSuffix}`;
+      field.strategy = "primitive";
+      if (!existingTypeNames.has(rawTypeName)) {
+        schema.types.push({
+          name: "PrismaJsonValue",
+          aliasOf: "JsonValue",
+          import: "@prisma/client/runtime/library",
+        });
+        existingTypeNames.add(rawTypeName);
+      }
+    } else if (enums.has(rawTypeName)) {
+      field.type = `Prisma${rawTypeName}${typeSuffix}`;
+      field.strategy = "primitive";
+      if (!existingTypeNames.has(rawTypeName)) {
+        schema.types.push({
+          name: `Prisma${rawTypeName}`,
+          aliasOf: rawTypeName,
+          import: "@prisma/client",
+        });
+        existingTypeNames.add(rawTypeName);
+      }
+    } else {
+      const sourceTable = entity;
+      const targetTable = rawTypeName;
+      const ref = refs.find((ref) =>
+        sourceTable < targetTable
+          ? ref[0].table === sourceTable && ref[1].table === targetTable
+          : ref[0].table === targetTable && ref[1].table === sourceTable
+      );
+      if (ref) {
+        const source = ref.find((r) => r.table === sourceTable);
+        const target = ref.find((r) => r.table === targetTable);
+        if (target.relation === "*") {
+          field.type = `${targetTable}[]`;
+        } else {
+          field.type = `${targetTable}${typeSuffix}`;
         }
-        break;
-      default:
-        if (enums.has(rawTypeName)) {
-          field.type = `Prisma${rawTypeName}${typeSuffix}`;
-          if (!existingTypeNames.has(rawTypeName)) {
-            schema.types.push({
-              name: `Prisma${rawTypeName}`,
-              aliasOf: rawTypeName,
-              import: "@prisma/client",
-            });
-            existingTypeNames.add(rawTypeName);
-          }
-        }
+        field.strategy = "association";
+        field.sourceFields = source.fields;
+        field.targetFields = target.fields;
+      }
     }
     if (field.type) {
-      schema.fields.push({ ...field, strategy: "primitive" });
+      schema.fields.push(field);
     }
   });
   return schema;
+}
+
+async function loadTableSchemas(isVerbose) {
+  const database = await loadDbml(PRISMA_DBML_FILE_PATH, isVerbose);
+  const enums = new Set(
+    database.schemas.flatMap((s) => s.enums).map((e) => e.name)
+  );
+  const refs = database.schemas
+    .flatMap((s) => s.refs)
+    .map((ref) => ref.endpoints.slice(0, 2))
+    .map(([a, b]) => (a.tableName < b.tableName ? [a, b] : [b, a]))
+    .map(([a, b]) => [
+      { table: a.tableName, fields: a.fieldNames, relation: a.relation },
+      { table: b.tableName, fields: b.fieldNames, relation: b.relation },
+    ]);
+  const tables = database.schemas.flatMap((s) => s.tables);
+  return tables.map((table) => buildTableSchema(table, enums, refs));
 }
 
 function merge(inputSchema, tableSchema, isVerbose) {
@@ -177,15 +205,10 @@ function merge(inputSchema, tableSchema, isVerbose) {
   return { entity, model, ...inputSchema, types, fields };
 }
 
-function reconcile(inputSchemas, database, isVerbose) {
+function reconcile(inputSchemas, tableSchemas, isVerbose) {
   if (isVerbose) {
     console.log("[AIREXT/INFO] Reconciling schemas ...");
   }
-  const tables = database.schemas.flatMap((s) => s.tables);
-  const enums = new Set(
-    database.schemas.flatMap((s) => s.enums).map((e) => e.name)
-  );
-  const tableSchemas = tables.map((table) => buildTableSchema(table, enums));
   const schemaNames = Array.from(
     new Set([
       ...tableSchemas.map((s) => s.entity),
@@ -217,8 +240,8 @@ async function generate(isVerbose) {
   // load config
   const config = await loadConfig(isVerbose);
   const inputSchemas = await loadSchemas(config.schemaPath, isVerbose);
-  const database = await loadDbml(PRISMA_DBML_FILE_PATH, isVerbose);
-  const outputSchemas = reconcile(inputSchemas, database, isVerbose);
+  const tableSchemas = await loadTableSchemas(isVerbose);
+  const outputSchemas = reconcile(inputSchemas, tableSchemas, isVerbose);
 
   // Ensure the output directory exists
   await fs.promises.mkdir(config.outputPath, { recursive: true });

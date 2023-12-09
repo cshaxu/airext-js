@@ -1,30 +1,52 @@
-Table Message {
+Table File {
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
-  chatId String [not null]
-  userId String [not null]
-  type MessageType [not null]
-  content String
-  attachment Json
-  parentMessageId String
-  userFile UserFile
+  size Int [not null]
+  type FileType [not null]
+  pages FilePage [not null]
+  chunks FilePageChunk [not null]
 }
 
-Table User {
+Table FilePage {
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  email String [unique, not null]
-  emailVerified DateTime
-  firstName String
-  imageUrl String
-  lastName String
-  messages Message [not null]
+  fileId String [not null]
+  pageId Int [not null]
+  lines Json [not null]
+  file File [not null]
+  chunks FilePageChunk [not null]
+
+  indexes {
+    (fileId, pageId) [unique]
+  }
 }
 
-Enum MessageType {
-  USER
-  SYSTEM
+Table FilePageChunk {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  fileId String [not null]
+  pageId Int [not null]
+  chunkId Int [not null]
+  startLineId Int [not null]
+  endLineId Int [not null]
+  file File [not null]
+  page FilePage [not null]
+
+  indexes {
+    (fileId, pageId, chunkId) [unique]
+  }
 }
 
-Ref: Message.userId > User.id
+Enum FileType {
+  PDF
+  EPUB
+  TEXT
+}
+
+Ref: FilePage.fileId > File.id
+
+Ref: FilePageChunk.fileId > File.id
+
+Ref: FilePageChunk.(fileId, pageId) > FilePage.(fileId, pageId)
