@@ -23,7 +23,7 @@ function presentField(field) {
 -%>
 <% if (!schema.internal) { -%>
 import { <%= schema.strings.responseClass %> } from './<%= schema.strings.typePackage %>';
-  <%_ schema.types.filter(isEntityType).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
+  <%_ schema.types.filter(isEntityType).filter((type) => !isOtherEntityInternal(type.name)).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
 import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
   <%_ }); -%>
 import { <%= getManyResponseName() %> } from './<%= getApiPackageName() %>';

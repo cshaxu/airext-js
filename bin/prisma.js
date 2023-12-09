@@ -198,7 +198,9 @@ function merge(inputSchema, tableSchema, isVerbose) {
     (f) => !inputTypeNames.has(f.name)
   );
   const tableFields = tableSchema.fields.filter(
-    (f) => !inputFieldNames.has(f.name)
+    (f) =>
+      !inputFieldNames.has(f.name) &&
+      inputSchema.skipPrismaFields?.includes(f.name) !== true
   );
   const types = [...tableTypes, ...inputTypes];
   const fields = [...tableFields, ...inputFields];
