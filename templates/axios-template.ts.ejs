@@ -21,46 +21,45 @@ function presentField(field) {
   return onePresenter;
 }
 -%>
-import { <%= schema.strings.responseClass %> } from './<%= schema.strings.typePackage %>';
-<% schema.types.filter(isEntityType).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
-import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
-<% }); -%>
 <% if (!schema.internal) { -%>
+import { <%= schema.strings.responseClass %> } from './<%= schema.strings.typePackage %>';
+  <%_ schema.types.filter(isEntityType).filter((type) => type.name !== schema.entityName).forEach((type) => { -%>
+import <%= `${toTitleCase(type.name)}Axios` %> from './<%= `${toKababCase(type.name)}-axios` %>';
+  <%_ }); -%>
 import { <%= getManyResponseName() %> } from './<%= getApiPackageName() %>';
 import { <%= getOneResponseName() %> } from './<%= getApiPackageName() %>';
-<% } -%>
-<% if (!schema.internal && schema.api) { -%>
+  <%_ if (schema.api) { -%>
 import axios from '<%= config.axiosPackage ?? 'axios' %>';
-  <%_ if (hasGetMany()) { -%>
-import { toQueryString } from 'airext';
-  <%_ } -%>
-  <%_ if (hasGetOne() || hasDeleteOne()) { -%>
-import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
-  <%_ } -%>
-  <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
-import {
     <%_ if (hasGetMany()) { -%>
+import { toQueryString } from 'airext';
+    <%_ } -%>
+    <%_ if (hasGetOne() || hasDeleteOne()) { -%>
+import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
+    <%_ } -%>
+    <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
+import {
+      <%_ if (hasGetMany()) { -%>
   <%= getGetManyQueryName() %>,
-    <%_ } -%>
-    <%_ if (hasCreateOne()) { -%>
+      <%_ } -%>
+      <%_ if (hasCreateOne()) { -%>
   <%= getCreateOneBodyName() %>,
-    <%_ } -%>
-    <%_ if (hasUpdateOne()) { -%>
+      <%_ } -%>
+      <%_ if (hasUpdateOne()) { -%>
   <%= getUpdateOneBodyName() %>,
-    <%_ } -%>
+      <%_ } -%>
 } from '<%= schema.api.request.import %>';
+    <%_ } -%>
   <%_ } -%>
-<% } -%>
 
 function present(one: any): <%= schema.strings.responseClass %> {
   return {
     ...one,
-<% schema.fields.filter(isExternalField).filter((field) => isDateTypeField(field) || isEntityTypeField(field)).forEach((field) => { -%>
+  <%_ schema.fields.filter(isExternalField).filter((field) => isDateTypeField(field) || isEntityTypeField(field)).forEach((field) => { -%>
     ...(one.<%= field.name %> !== undefined && { <%= field.name %>: <%= presentField(field) %> }),
-<% }); -%>
+  <%_ }); -%>
   };
 }
-<% if (!schema.internal) { -%>
+
 function presentManyResponse(response: any): <%= getManyResponseName() %> {
   const cursor = {
     ...response.cursor,
@@ -75,9 +74,9 @@ function presentManyResponse(response: any): <%= getManyResponseName() %> {
 function presentOneResponse(response: any): <%= getOneResponseName() %> {
   return { <%= getOneEntityVarName() %>: present(response.<%= getOneEntityVarName() %>) };
 }
-<% } -%>
-<% if (!schema.internal && schema.api) { -%>
-  <%_ if (hasGetMany()) { -%>
+
+  <%_ if (schema.api) { -%>
+    <%_ if (hasGetMany()) { -%>
 
 async function getMany(query: <%= getGetManyQueryName() %>): Promise<<%= getManyResponseName() %>> {
   const queryString = toQueryString(query);
@@ -86,8 +85,8 @@ async function getMany(query: <%= getGetManyQueryName() %>): Promise<<%= getMany
   const { data } = await axios.get(path);
   return presentManyResponse(data);
 }
-  <%_ } -%>
-  <%_ if (hasGetOne()) { -%>
+    <%_ } -%>
+    <%_ if (hasGetOne()) { -%>
 
 async function getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getOneResponseName() %>> {
   const { <%= schema.api.keys.join(', ') %> } = params;
@@ -96,16 +95,16 @@ async function getOne(params: <%= getGetOneParamsName() %>): Promise<<%= getOneR
   const { data } = await axios.get(path);
   return presentOneResponse(data);
 }
-  <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
+    <%_ } -%>
+    <%_ if (hasCreateOne()) { -%>
 
 async function createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= getOneResponseName() %>> {
   const path = '<%= getApiBasePath() %>';
   const { data } = await axios.post(path, body);
   return presentOneResponse(data);
 }
-  <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
+    <%_ } -%>
+    <%_ if (hasUpdateOne()) { -%>
 
 async function updateOne(params: <%= getGetOneParamsName() %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= getOneResponseName() %>> {
   const { <%= schema.api.keys.join(', ') %> } = params;
@@ -114,8 +113,8 @@ async function updateOne(params: <%= getGetOneParamsName() %>, body: <%= getUpda
   const { data } = await axios.put(path, body);
   return presentOneResponse(data);
 }
-  <%_ } -%>
-  <%_ if (hasDeleteOne()) { -%>
+    <%_ } -%>
+    <%_ if (hasDeleteOne()) { -%>
 
 async function deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getOneResponseName() %>> {
   const { <%= schema.api.keys.join(', ') %> } = params;
@@ -124,59 +123,60 @@ async function deleteOne(params: <%= getGetOneParamsName() %>): Promise<<%= getO
   const { data } = await axios.delete(path);
   return presentOneResponse(data);
 }
+    <%_ } -%>
   <%_ } -%>
-<% } -%>
 
-<% if (schema.deprecated) { -%>
+  <%_ if (schema.deprecated) { -%>
 /** @deprecated */
-<% } -%>
+  <%_ } -%>
 const <%= `${toTitleCase(schema.entityName)}Axios` %> = {
-  <%_ if (schema.deprecated) { -%>
+    <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-  <%_ } -%>
+    <%_ } -%>
   present,
-<% if (!schema.internal) { -%>
-  <%_ if (schema.deprecated) { -%>
+  <%_ if (!schema.internal) { -%>
+    <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-  <%_ } -%>
+    <%_ } -%>
   presentManyResponse,
-  <%_ if (schema.deprecated) { -%>
+    <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-  <%_ } -%>
+    <%_ } -%>
   presentOneResponse,
-<% } -%>
-<% if (!schema.internal && schema.api) { -%>
-  <%_ if (hasGetMany()) { -%>
-    <%_ if (schema.deprecated) { -%>
+  <%_ } -%>
+  <%_ if (schema.api) { -%>
+    <%_ if (hasGetMany()) { -%>
+      <%_ if (schema.deprecated) { -%>
   /** @deprecated */
-    <%_ } -%>
+      <%_ } -%>
   getMany,
-  <%_ } -%>
-  <%_ if (hasGetOne()) { -%>
-    <%_ if (schema.deprecated) { -%>
-  /** @deprecated */
     <%_ } -%>
+    <%_ if (hasGetOne()) { -%>
+      <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+      <%_ } -%>
   getOne,
-  <%_ } -%>
-  <%_ if (hasCreateOne()) { -%>
-    <%_ if (schema.deprecated) { -%>
-  /** @deprecated */
     <%_ } -%>
+    <%_ if (hasCreateOne()) { -%>
+      <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+      <%_ } -%>
   createOne,
-  <%_ } -%>
-  <%_ if (hasUpdateOne()) { -%>
-    <%_ if (schema.deprecated) { -%>
-  /** @deprecated */
     <%_ } -%>
+    <%_ if (hasUpdateOne()) { -%>
+      <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+      <%_ } -%>
   updateOne,
-  <%_ } -%>
-  <%_ if (hasDeleteOne()) { -%>
-    <%_ if (schema.deprecated) { -%>
-  /** @deprecated */
     <%_ } -%>
+    <%_ if (hasDeleteOne()) { -%>
+      <%_ if (schema.deprecated) { -%>
+  /** @deprecated */
+      <%_ } -%>
   deleteOne,
+    <%_ } -%>
   <%_ } -%>
-<% } -%>
 };
 
 export default <%= `${toTitleCase(schema.entityName)}Axios` %>;
+<% } -%>
