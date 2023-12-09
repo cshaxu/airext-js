@@ -55,6 +55,9 @@ function buildModelsLoader(entityName) /* Code */ {
 }
 
 function getSelfModelsLoader() /* Code */ {
+  if (schema.isPrisma === false) {
+    return "[/* Please add `skipSelfLoader: true` in yaml */]";
+  }
   return buildModelsLoader(toTitleCase(schema.entityName));
 }
 
@@ -68,10 +71,10 @@ function getTargetModelsLoader(field) /* Code */ {
 /* block */
 
 function getBaseExtraImports() /* Code[] */ {
-  const requiredImports = [
-    "import { batchLoad } from 'airext';",
-    "import { Prisma } from '@prisma/client';",
-  ];
+  const requiredImports = ["import { batchLoad } from 'airext';"];
+  if (schema.isPrisma !== false) {
+    requiredImports.push("import { Prisma } from '@prisma/client';");
+  }
   const prismaImport =
     JSON.parse(JSON.stringify(config.prismaImport)) ??
     "import prisma from 'TODO: specify prismaImport in your airent config';";
