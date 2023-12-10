@@ -6,7 +6,7 @@ function getApiBasePath() {
 
 function presentField(field) {
   const presenter = utils.isEntityTypeField(field)
-    ? `${utils.toTitleCase(utils.toPrimitiveTypeName(field.type))}Axios.present`
+    ? `${utils.toTitleCase(field._type._entity.name)}Axios.present`
     : isDateTypeField(field)
     ? 'new Date'
     : 'INVALID';
@@ -21,19 +21,21 @@ function presentField(field) {
 }
 -%>
 <% if (!entity.internal) { -%>
-import { <%= entity.strings.responseClass %> } from './<%= entity.strings.typePackage %>';
+import {
+  <%= entity.strings.responseClass %>,
+  <%= getManyResponseName() %>,
+  <%= getOneResponseName() %>,
+  <%_ if (entity.api && (hasGetOne() || hasUpdateOne() || hasDeleteOne())) { -%>
+  <%= getGetOneParamsName() %>,
+  <%_ } -%>
+} from './<%= entity.strings.typePackage %>';
   <%_ entity.types.filter(utils.isPresentableEntityType).filter((type) => type.name !== entity.name).forEach((type) => { -%>
 import <%= `${utils.toTitleCase(type.name)}Axios` %> from './<%= `${utils.toKababCase(type.name)}-axios` %>';
   <%_ }); -%>
-import { <%= getManyResponseName() %> } from './<%= getApiPackageName() %>';
-import { <%= getOneResponseName() %> } from './<%= getApiPackageName() %>';
   <%_ if (entity.api) { -%>
 <%- config.axiosImport ?? "import axios from 'axios';" %>
     <%_ if (hasGetMany()) { -%>
 import { toQueryString } from 'airext';
-    <%_ } -%>
-    <%_ if (hasGetOne() || hasDeleteOne()) { -%>
-import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
     <%_ } -%>
     <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
 import {

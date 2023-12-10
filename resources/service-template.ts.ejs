@@ -3,12 +3,14 @@ import { <%= entity.strings.entityClass %> } from '../<%= entity.strings.entityP
   <%_ entity.types.filter(utils.isImportType).forEach((type) => { -%>
 import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPackage %>';
   <%_ }); -%>
+import {
   <%_ entity.types.filter(utils.isCustomType).forEach((type) => { -%>
-import { <%= type.name %> } from './<%= entity.strings.typePackage %>';
+  <%= type.name %>,
   <%_ }); -%>
-  <%_ if (hasInternalGetOne()) { -%>
-import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
+  <%_ if (hasGetOne() || hasUpdateOne() || hasDeleteOne()) { -%>
+  <%= getGetOneParamsName() %>,
   <%_ } -%>
+} from './<%= entity.strings.typePackage %>';
   <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
 import {
     <%_ if (hasGetMany()) { -%>

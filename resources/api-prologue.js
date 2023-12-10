@@ -79,13 +79,13 @@ function getUpdateOneBodyName() {
 function isCursorField(field) {
   return (
     !!entity.api?.cursors?.includes(field.name) &&
+    utils.isPrimitiveField(field) &&
     utils.isPresentableField(field)
   );
 }
 
 function isDateTypeField(field) {
-  const fieldTypeName = utils.toPrimitiveTypeName(field.type);
-  return fieldTypeName === "Date";
+  return field.strings.fieldClass === "Date";
 }
 
 function hasApiMethod(methodName) {
@@ -114,4 +114,79 @@ function hasDeleteOne() {
 
 function hasInternalGetOne() {
   return hasGetOne() || hasCreateOne() || hasUpdateOne() || hasDeleteOne();
+}
+
+/********/
+/* CODE */
+/********/
+
+function getTypeAfterLines() {
+  const lines = [];
+  if (!utils.isPresentableEntity(entity)) {
+    return lines;
+  }
+  lines.push("");
+  if (entity.deprecated) {
+    lines.push("/** @deprecated */");
+  }
+  lines.push(`export type ${getCursorName()} = {`);
+  lines.push("  count: number;");
+  entity.fields.filter(isCursorField).forEach((field) => {
+    if (field.deprecated) {
+      lines.push("  /** @deprecated */");
+    }
+    lines.push(
+      `  ${getCursorFieldName(field, "min")}: ${
+        field.strings.fieldResponseType
+      } | null;`
+    );
+    if (field.deprecated) {
+      lines.push("  /** @deprecated */");
+    }
+    lines.push(
+      `  ${getCursorFieldName(field, "max")}: ${
+        field.strings.fieldResponseType
+      } | null;`
+    );
+  });
+  lines.push("};");
+  lines.push("");
+  if (entity.deprecated) {
+    lines.push("/** @deprecated */");
+  }
+  lines.push(`export type ${getManyResponseName()} = {`);
+  lines.push(`  cursor: ${getCursorName()};`);
+  if (entity.deprecated) {
+    lines.push("  /** @deprecated */");
+  }
+  lines.push(
+    `  ${getManyEntitiesVarName()}: ${entity.strings.responseClass}[];`
+  );
+  lines.push("};");
+  lines.push("");
+  if (entity.deprecated) {
+    lines.push("/** @deprecated */");
+  }
+  lines.push(`export type ${getOneResponseName()} = {`);
+  if (entity.deprecated) {
+    lines.push("  /** @deprecated */");
+  }
+  lines.push(`  ${getOneEntityVarName()}: ${entity.strings.responseClass};`);
+  lines.push("};");
+  if (entity.api && hasInternalGetOne()) {
+    lines.push("");
+    if (entity.deprecated) {
+      lines.push("/** @deprecated */");
+    }
+    lines.push(`export type ${getGetOneParamsName()} = {`);
+    entity.api.keys.forEach((key) => {
+      const field = utils.queryField(key, entity);
+      if (field.deprecated) {
+        lines.push("  /** @deprecated */");
+      }
+      lines.push(`  ${key}: ${field.type};`);
+    });
+    lines.push("};");
+  }
+  return lines;
 }

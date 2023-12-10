@@ -19,6 +19,10 @@ function toKababCase(string) /** string */ {
     .toLowerCase();
 }
 
+function toPrimitiveTypeName(string) /** string */ {
+  return string.split("|")[0].split("[]")[0].trim();
+}
+
 async function sequential(functions) {
   const results = [];
   for (const func of functions) {
@@ -190,21 +194,33 @@ function merge(inputSchema, tableSchema, isVerbose) {
     console.log(`[AIREXT/INFO] Merging schema ${tableSchema.name} ...`);
   }
   const { name, model } = tableSchema;
-  const inputTypes = inputSchema.types ?? [];
+
   const inputFields = inputSchema.fields ?? [];
-  const inputTypeNames = new Set(inputTypes.map((t) => t.name));
   const inputFieldNames = new Set(inputFields.map((f) => f.name));
-  const tableTypes = tableSchema.types.filter(
-    (f) => !inputTypeNames.has(f.name)
-  );
   const tableFields = tableSchema.fields.filter(
     (f) =>
       !inputFieldNames.has(f.name) &&
       inputSchema.skipPrismaFields?.includes(f.name) !== true
   );
-  const types = [...tableTypes, ...inputTypes];
   const fields = [...tableFields, ...inputFields];
-  return { name, model, ...inputSchema, types, fields };
+
+  const inputTypes = inputSchema.types ?? [];
+  const inputTypeNames = new Set(inputTypes.map((t) => t.name));
+  const tableTypes = tableSchema.types.filter(
+    (f) => !inputTypeNames.has(f.name)
+  );
+
+  const entity = { name, model, ...inputSchema };
+  const referencedTypeNameSet = new Set([
+    entity.model,
+    ...fields.map((f) => f.type).map(toPrimitiveTypeName),
+  ]);
+  const types = [...tableTypes, ...inputTypes].filter(
+    (t) => t.import === undefined || referencedTypeNameSet.has(t.name)
+  );
+  entity.types = types;
+  entity.fields = fields;
+  return entity;
 }
 
 function reconcile(inputSchemas, tableSchemas, isVerbose) {

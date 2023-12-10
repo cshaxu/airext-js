@@ -1,8 +1,13 @@
-<% if (!entity.internal) { -%>
+<% if (utils.isPresentableEntity(entity)) { -%>
 import { getMax, getMin } from 'airext';
 import {
   <%= entity.strings.fieldRequestClass %>,
   <%= entity.strings.responseClass %>,
+  <%= getManyResponseName() %>,
+  <%= getOneResponseName() %>,
+  <%_ if (entity.api && hasInternalGetOne()) { -%>
+  <%= getGetOneParamsName() %>,
+  <%_ } -%>
 } from './<%= entity.strings.typePackage %>';
 import { <%= entity.strings.entityClass %> } from '../<%= entity.strings.entityPackage %>';
   <%_ entity.types.filter(utils.isImportType).forEach((type) => { -%>
@@ -28,33 +33,7 @@ import {
     <%_ } -%>
   <%_ } -%>
 
-  <%_ if (entity.deprecated) { -%>
-/** @deprecated */
-  <%_ } -%>
-export type <%= getCursorName() %> = {
-  count: number;
-  <%_ entity.fields.filter(isCursorField).forEach((field) => { -%>
-    <%_ if (field.deprecated) { -%>
-  /** @deprecated */
-    <%_ } -%>
-  <%= getCursorFieldName(field, "min") %>: <%= field.strings.fieldResponseType %> | null;
-    <%_ if (field.deprecated) { -%>
-  /** @deprecated */
-    <%_ } -%>
-  <%= getCursorFieldName(field, "max") %>: <%= field.strings.fieldResponseType %> | null;
-  <%_ }); -%>
-};
-
-  <%_ if (entity.deprecated) { -%>
-/** @deprecated */
-  <%_ } -%>
-export type <%= getManyResponseName() %> = {
-  cursor: <%= getCursorName() %>;
-  <%_ if (entity.deprecated) { -%>
-  /** @deprecated */
-  <%_ } -%>
-  <%= getManyEntitiesVarName() %>: <%= entity.strings.responseClass %>[];
-};
+// api response builders
 
   <%_ if (entity.deprecated) { -%>
 /** @deprecated */
@@ -82,16 +61,6 @@ export async function <%= `build${getManyResponseName()}` %>(
   <%_ if (entity.deprecated) { -%>
 /** @deprecated */
   <%_ } -%>
-export type <%= getOneResponseName() %> = {
-  <%_ if (entity.deprecated) { -%>
-  /** @deprecated */
-  <%_ } -%>
-  <%= getOneEntityVarName() %>: <%= entity.strings.responseClass %>;
-};
-
-  <%_ if (entity.deprecated) { -%>
-/** @deprecated */
-  <%_ } -%>
 export async function <%= `build${getOneResponseName()}` %>(
   one: <%= entity.strings.entityClass %>,
   fieldRequest?: <%= entity.strings.fieldRequestClass %> | boolean,
@@ -100,6 +69,10 @@ export async function <%= `build${getOneResponseName()}` %>(
   return { <%= getOneEntityVarName() %> };
 }
   <%_ if (entity.api) { -%>
+    <%_ if (hasGetMany() || hasInternalGetOne()) { -%>
+
+// api executors
+    <%_ } -%>
     <%_ if (hasGetMany()) { -%>
 
       <%_ if (entity.deprecated) { -%>
@@ -122,17 +95,6 @@ export async function <%= `getMany${getPluralEntName()}` %>(
   await service.afterGetMany(many, query);
   return await <%= `build${getManyResponseName()}` %>(many, fieldRequest);
 }
-    <%_ } -%>
-    <%_ if (hasInternalGetOne()) { -%>
-
-      <%_ if (entity.deprecated) { -%>
-/** @deprecated */
-      <%_ } -%>
-export type <%= getGetOneParamsName() %> = {
-      <%_ entity.api.keys.forEach((key) => { -%>
-  <%= key %>: <%= utils.queryField(key, entity).type %>;
-      <%_ }); -%>
-};
     <%_ } -%>
     <%_ if (hasGetOne()) { -%>
 
