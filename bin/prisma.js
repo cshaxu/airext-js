@@ -95,14 +95,14 @@ const NATIVE_PRISMA_TYPES = {
 };
 
 function buildTableSchema(table, enums, refs) {
-  const { name: entity } = table;
-  const schema = {
-    entity,
-    model: `Prisma${entity}`,
+  const { name: entityName } = table;
+  const entity = {
+    name: entityName,
+    model: `Prisma${entityName}`,
     types: [
       {
-        name: `Prisma${entity}`,
-        aliasOf: entity,
+        name: `Prisma${entityName}`,
+        aliasOf: entityName,
         import: "@prisma/client",
       },
     ],
@@ -110,9 +110,9 @@ function buildTableSchema(table, enums, refs) {
   };
   const existingTypeNames = new Set();
   table.fields.forEach((rawField, index) => {
-    const { name, type } = rawField;
+    const { name: fieldName, type } = rawField;
     const { type_name: rawTypeName } = type;
-    const field = { id: index + 1, name };
+    const field = { id: index + 1, name: fieldName };
     const typeSuffix = rawField.pk || rawField.not_null ? "" : " | null";
     const nativeType = NATIVE_PRISMA_TYPES[rawTypeName];
     if (nativeType) {
@@ -122,7 +122,7 @@ function buildTableSchema(table, enums, refs) {
       field.type = `PrismaJsonValue${typeSuffix}`;
       field.strategy = "primitive";
       if (!existingTypeNames.has(rawTypeName)) {
-        schema.types.push({
+        entity.types.push({
           name: "PrismaJsonValue",
           aliasOf: "JsonValue",
           import: "@prisma/client/runtime/library",
@@ -133,7 +133,7 @@ function buildTableSchema(table, enums, refs) {
       field.type = `Prisma${rawTypeName}${typeSuffix}`;
       field.strategy = "primitive";
       if (!existingTypeNames.has(rawTypeName)) {
-        schema.types.push({
+        entity.types.push({
           name: `Prisma${rawTypeName}`,
           aliasOf: rawTypeName,
           import: "@prisma/client",
@@ -141,7 +141,7 @@ function buildTableSchema(table, enums, refs) {
         existingTypeNames.add(rawTypeName);
       }
     } else {
-      const sourceTable = entity;
+      const sourceTable = entityName;
       const targetTable = rawTypeName;
       const ref = refs.find((ref) =>
         sourceTable < targetTable
@@ -162,10 +162,10 @@ function buildTableSchema(table, enums, refs) {
       }
     }
     if (field.type) {
-      schema.fields.push(field);
+      entity.fields.push(field);
     }
   });
-  return schema;
+  return entity;
 }
 
 async function loadTableSchemas(isVerbose) {
@@ -187,9 +187,9 @@ async function loadTableSchemas(isVerbose) {
 
 function merge(inputSchema, tableSchema, isVerbose) {
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Merging schema ${tableSchema.entity} ...`);
+    console.log(`[AIREXT/INFO] Merging schema ${tableSchema.name} ...`);
   }
-  const { entity, model } = tableSchema;
+  const { name, model } = tableSchema;
   const inputTypes = inputSchema.types ?? [];
   const inputFields = inputSchema.fields ?? [];
   const inputTypeNames = new Set(inputTypes.map((t) => t.name));
@@ -204,7 +204,7 @@ function merge(inputSchema, tableSchema, isVerbose) {
   );
   const types = [...tableTypes, ...inputTypes];
   const fields = [...tableFields, ...inputFields];
-  return { entity, model, ...inputSchema, types, fields };
+  return { name, model, ...inputSchema, types, fields };
 }
 
 function reconcile(inputSchemas, tableSchemas, isVerbose) {
@@ -213,13 +213,13 @@ function reconcile(inputSchemas, tableSchemas, isVerbose) {
   }
   const schemaNames = Array.from(
     new Set([
-      ...tableSchemas.map((s) => s.entity),
-      ...inputSchemas.map((s) => s.entity),
+      ...tableSchemas.map((s) => s.name),
+      ...inputSchemas.map((s) => s.name),
     ])
   ).sort();
   return schemaNames.map((schemaName) => {
-    const tableSchema = tableSchemas.find((s) => s.entity === schemaName);
-    const inputSchema = inputSchemas.find((s) => s.entity === schemaName);
+    const tableSchema = tableSchemas.find((s) => s.name === schemaName);
+    const inputSchema = inputSchemas.find((s) => s.name === schemaName);
     return !tableSchema
       ? inputSchema
       : !inputSchema
@@ -228,13 +228,13 @@ function reconcile(inputSchemas, tableSchemas, isVerbose) {
   });
 }
 
-async function generateOne(schema, outputPath, isVerbose) {
-  const fileName = `${toKababCase(schema.entity)}.yml`;
+async function generateOne(entity, outputPath, isVerbose) {
+  const fileName = `${toKababCase(entity.name)}.yml`;
   const outputFilePath = path.join(outputPath, fileName);
   if (isVerbose) {
     console.log(`[AIREXT/INFO] Generating YAML ${outputFilePath} ...`);
   }
-  const content = yaml.dump(schema);
+  const content = yaml.dump(entity);
   await fs.promises.writeFile(outputFilePath, content, "utf-8");
 }
 
@@ -250,7 +250,7 @@ async function generate(isVerbose) {
 
   // Generate new YAML files
   const functions = outputSchemas.map(
-    (schema) => () => generateOne(schema, config.outputPath, isVerbose)
+    (entity) => () => generateOne(entity, config.outputPath, isVerbose)
   );
   await sequential(functions);
 }

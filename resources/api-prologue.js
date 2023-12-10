@@ -10,50 +10,66 @@
 /* STRING */
 /**********/
 
+function getModuleSuffix() /* string */ {
+  return config.isModule ? ".js" : "";
+}
+
 function getApiPackageName() {
-  const prefix = toKababCase(toTitleCase(schema.entityName));
+  const prefix = utils.toKababCase(entity.name);
   const suffix = getModuleSuffix();
   return `${prefix}-api${suffix}`;
 }
 
 function getOneEntityVarName() {
-  return toCamelCase(schema.entityName);
+  return utils.toCamelCase(entity.name);
 }
 
 function getManyEntitiesVarName() {
-  return toCamelCase(pluralize(schema.entityName));
+  return utils.toCamelCase(utils.pluralize(entity.name));
+}
+
+function getCursorFieldName(field, direction) {
+  return `${direction}${utils.toTitleCase(field.name)}`;
+}
+
+function getSingularEntName() {
+  return utils.toTitleCase(entity.name);
+}
+
+function getPluralEntName() {
+  return utils.toTitleCase(utils.pluralize(entity.name));
 }
 
 function getCursorName() {
-  return `Many${toTitleCase(pluralize(schema.entityName))}Cursor`;
+  return `Many${getPluralEntName()}Cursor`;
 }
 
 function getManyResponseName() {
-  return `Many${toTitleCase(pluralize(schema.entityName))}Response`;
+  return `Many${getPluralEntName()}Response`;
 }
 
 function getOneResponseName() {
-  return `One${toTitleCase(schema.entityName)}Response`;
+  return `One${getSingularEntName()}Response`;
 }
 
 function getServiceName() {
-  return `${toTitleCase(schema.entityName)}Service`;
+  return `${getSingularEntName()}Service`;
 }
 
 function getGetManyQueryName() {
-  return `GetMany${toTitleCase(pluralize(schema.entityName))}Query`;
+  return `GetMany${getPluralEntName()}Query`;
 }
 
 function getGetOneParamsName() {
-  return `GetOne${toTitleCase(schema.entityName)}Params`;
+  return `GetOne${getSingularEntName()}Params`;
 }
 
 function getCreateOneBodyName() {
-  return `CreateOne${toTitleCase(schema.entityName)}Body`;
+  return `CreateOne${getSingularEntName()}Body`;
 }
 
 function getUpdateOneBodyName() {
-  return `UpdateOne${toTitleCase(schema.entityName)}Body`;
+  return `UpdateOne${getSingularEntName()}Body`;
 }
 
 /***********/
@@ -61,16 +77,19 @@ function getUpdateOneBodyName() {
 /***********/
 
 function isCursorField(field) {
-  return !!schema.api?.cursors?.includes(field.name) && isExternalField(field);
+  return (
+    !!entity.api?.cursors?.includes(field.name) &&
+    utils.isPresentableField(field)
+  );
 }
 
 function isDateTypeField(field) {
-  const fieldTypeName = toPrimitiveTypeName(field.type);
+  const fieldTypeName = utils.toPrimitiveTypeName(field.type);
   return fieldTypeName === "Date";
 }
 
 function hasApiMethod(methodName) {
-  return !!schema.api?.methods?.includes(methodName);
+  return !!entity.api?.methods?.includes(methodName);
 }
 
 function hasGetMany() {

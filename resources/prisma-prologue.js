@@ -13,12 +13,8 @@
 /* QUERY  */
 /**********/
 
-function getAuxiliaryFields() /* Field[] */ {
-  return schema.fields.filter(isAuxiliaryField);
-}
-
-function getOtherEntityAuxiliaryFields(entityName) /* Field[] */ {
-  return schemaMap[entityName]?.fields?.filter(isAuxiliaryField);
+function getAuxiliaryFields(entiti) /* Field[] */ {
+  return entiti.fields.filter(isAuxiliaryField);
 }
 
 /***********/
@@ -36,11 +32,8 @@ function isLoaderGeneratable(field) /* boolean */ {
   if (field.prismaLoader === false) {
     return false;
   }
-  const otherEntitySchema = schemaMap[toPrimitiveTypeName(field.type)];
-  if (!otherEntitySchema || otherEntitySchema.isPrisma === false) {
-    return false;
-  }
-  return isEntityTypeField(field);
+  const otherEntity = field._type?._entity;
+  return otherEntity !== undefined && otherEntity.isPrisma !== false;
 }
 
 /********/
@@ -50,29 +43,29 @@ function isLoaderGeneratable(field) /* boolean */ {
 /* line */
 
 function buildModelsLoader(entityName) /* Code */ {
-  const prismaName = toCamelCase(entityName);
-  return `await batchLoad(prisma.${prismaName}.findMany, keys)`;
+  const prismaModelName = utils.toCamelCase(entityName);
+  return `await batchLoad(prisma.${prismaModelName}.findMany, keys)`;
 }
 
 function getSelfModelsLoader() /* Code */ {
-  if (schema.isPrisma === false) {
+  if (entity.isPrisma === false) {
     return "[/* Please add `skipSelfLoader: true` in yaml */]";
   }
-  return buildModelsLoader(toTitleCase(schema.entityName));
+  return buildModelsLoader(getSingularEntName());
 }
 
 function getTargetModelsLoader(field) /* Code */ {
   if (!isLoaderGeneratable(field)) {
     return "[/* TODO: load associated models */]";
   }
-  return buildModelsLoader(toPrimitiveTypeName(field.type));
+  return buildModelsLoader(field._type._entity.name);
 }
 
 /* block */
 
-function getBaseExtraImports() /* Code[] */ {
+function getBaseBeforeLines() /* Code[] */ {
   const requiredImports = ["import { batchLoad } from 'airext';"];
-  if (schema.isPrisma !== false) {
+  if (entity.isPrisma !== false) {
     requiredImports.push("import { Prisma } from '@prisma/client';");
   }
   const prismaImport =
@@ -82,18 +75,18 @@ function getBaseExtraImports() /* Code[] */ {
 }
 
 function getSelfLoaderLines() /* Code[] */ {
-  const auxiliaryFields = getAuxiliaryFields();
+  const auxiliaryFields = getAuxiliaryFields(entity);
   const beforeLine = `if (keys.length === 0) { return []; }`;
   const afterLine = `return (this as any).fromArray(loadedModels);`;
   if (auxiliaryFields.length === 0) {
     const loadedModelsLine = `const loadedModels = ${getSelfModelsLoader()};`;
     return [beforeLine, loadedModelsLine, afterLine];
   }
-  const { entityClass } = schema.strings;
+  const { entityClass } = entity.strings;
   const auxiliaryFieldLines = auxiliaryFields.map((af) => [
     `const { ${af.name} } = keys[0];`,
     `if (${af.name} === undefined) {`,
-    `  throw new Error('${entityClass}.${af.name} is undefined');`,
+    `  throw new Error('${entityClass}: ${af.name} is undefined');`,
     `}`,
   ]);
   const auxiliaryFieldNameList = auxiliaryFields
@@ -118,27 +111,26 @@ function getLoadConfigSetterLines(field) /* Code[] */ {
   const mapper = getLoadConfigTargetMapper(field);
   const setter = getLoadConfigSourceSetter(field);
   const mapperLine = `const map = ${mapper};`;
-  if (!isEntityTypeField(field)) {
+  if (!utils.isEntityTypeField(field)) {
     return [
       mapperLine,
       `sources.forEach((one) => (one.${field.name} = ${setter}));`,
     ];
   }
-  const { entityClass } = schema.strings;
-  const otherEntityName = toTitleCase(toPrimitiveTypeName(field.type));
-  const auxiliaryFieldLines = getOtherEntityAuxiliaryFields(
-    otherEntityName
-  ).map((af) => [
-    `  if (one.${af.name} === undefined) {`,
-    `    throw new Error('${entityClass}.${af.name} is undefined');`,
-    `  } else {`,
-    isArrayField(field)
-      ? `    one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
-      : isNullableField(field)
-      ? `    if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; }`
-      : `    one.${field.name}.${af.name} = one.${af.name};`,
-    `  }`,
-  ]);
+  const { entityClass } = entity.strings;
+  const auxiliaryFieldLines = getAuxiliaryFields(field._type._entity).map(
+    (af) => [
+      `  if (one.${af.name} === undefined) {`,
+      `    throw new Error('${entityClass}.${field.name}: ${af.name} is undefined');`,
+      `  } else {`,
+      utils.isArrayField(field)
+        ? `    one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
+        : utils.isNullableField(field)
+        ? `    if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; }`
+        : `    one.${field.name}.${af.name} = one.${af.name};`,
+      `  }`,
+    ]
+  );
   return [
     mapperLine,
     `sources.forEach((one) => {`,
@@ -152,10 +144,12 @@ function buildPrismaMethodSignatureLines(
   prismaMethod,
   typeSuffix
 ) /* Code[] */ {
-  const { entityName, strings } = schema;
-  const entName = toTitleCase(entityName);
-  const prismaArgName = `Prisma.${entName}${toTitleCase(prismaMethod)}Args`;
-  const auxiliaryFieldLines = getAuxiliaryFields().map(
+  const { name: entityName, strings } = entity;
+  const entName = utils.toTitleCase(entityName);
+  const prismaArgName = `Prisma.${entName}${utils.toTitleCase(
+    prismaMethod
+  )}Args`;
+  const auxiliaryFieldLines = getAuxiliaryFields(entity).map(
     (af) => `  ${af.name}: ${af.type},`
   );
   return [
@@ -164,7 +158,7 @@ function buildPrismaMethodSignatureLines(
     `  ENTITY extends ${strings.baseClass},`,
     `  T extends ${prismaArgName},`,
     ">(",
-    `  this: EntityConstructor<${schema.modelName}, ENTITY>,`,
+    `  this: EntityConstructor<${entity.model}, ENTITY>,`,
     `  args: Prisma.SelectSubset<T, ${prismaArgName}>,`,
     ...auxiliaryFieldLines,
     `): Promise<ENTITY${typeSuffix}> {`,
@@ -172,8 +166,8 @@ function buildPrismaMethodSignatureLines(
 }
 
 function buildPrismaManyMethodLines(prismaMethod) /* Code[] */ {
-  const prismaModelName = toCamelCase(schema.entityName);
-  const auxiliaryFields = getAuxiliaryFields();
+  const prismaModelName = utils.toCamelCase(entity.name);
+  const auxiliaryFields = getAuxiliaryFields(entity);
   const beforeLines = buildPrismaMethodSignatureLines(prismaMethod, "[]");
   const afterLines = ["  return (this as any).fromArray(models);", "}"];
 
@@ -196,8 +190,8 @@ function buildPrismaManyMethodLines(prismaMethod) /* Code[] */ {
 }
 
 function buildPrismaOneMethodLines(prismaMethod, isNullable) /* Code[] */ {
-  const prismaModelName = toCamelCase(schema.entityName);
-  const auxiliaryFields = getAuxiliaryFields();
+  const prismaModelName = utils.toCamelCase(entity.name);
+  const auxiliaryFields = getAuxiliaryFields(entity);
 
   const beforeLines = buildPrismaMethodSignatureLines(
     prismaMethod,
@@ -237,15 +231,15 @@ function buildPrismaNonNullableOneMethodLines(prismaMethod) /* Code[] */ {
 }
 
 function buildPrismaPassThruMethodLines(prismaMethod) /* Code[] */ {
-  const prismaModelName = toCamelCase(schema.entityName);
+  const prismaModelName = utils.toCamelCase(entity.name);
   return [
     "",
     `public static ${prismaMethod} = prisma.${prismaModelName}.${prismaMethod};`,
   ];
 }
 
-function getBaseExtraLines() /* Code[] */ {
-  if (schema.isPrisma === false) {
+function getBaseInsideLines() /* Code[] */ {
+  if (entity.isPrisma === false) {
     return [];
   }
   const nullableOneMethods = ["findUnique", "findFirst"];

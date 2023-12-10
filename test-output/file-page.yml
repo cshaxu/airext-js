@@ -1,4 +1,4 @@
-entity: FilePage
+name: FilePage
 model: PrismaFilePage
 types:
   - name: PrismaFilePage

@@ -1,0 +1,88 @@
+<% if (!entity.internal && entity.api) { -%>
+import { <%= entity.strings.entityClass %> } from '../<%= entity.strings.entityPackage %>';
+  <%_ entity.types.filter(utils.isImportType).forEach((type) => { -%>
+import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPackage %>';
+  <%_ }); -%>
+  <%_ entity.types.filter(utils.isCustomType).forEach((type) => { -%>
+import { <%= type.name %> } from './<%= entity.strings.typePackage %>';
+  <%_ }); -%>
+  <%_ if (hasInternalGetOne()) { -%>
+import { <%= getGetOneParamsName() %> } from './<%= getApiPackageName() %>';
+  <%_ } -%>
+  <%_ if (hasGetMany() || hasCreateOne() || hasUpdateOne()) { -%>
+import {
+    <%_ if (hasGetMany()) { -%>
+  <%= getGetManyQueryName() %>,
+    <%_ } -%>
+    <%_ if (hasCreateOne()) { -%>
+  <%= getCreateOneBodyName() %>,
+    <%_ } -%>
+    <%_ if (hasUpdateOne()) { -%>
+  <%= getUpdateOneBodyName() %>,
+    <%_ } -%>
+} from '<%= entity.api.request.import %>';
+  <%_ } -%>
+
+  <%_ if (entity.deprecated) { -%>
+/** @deprecated */
+  <%_ } -%>
+export abstract class <%= `${getServiceName()}Base` %> {
+  <%_ if (entity.api.service.fields?.length) { -%>
+    <%_ entity.api.service.fields.forEach((field) => { -%>
+  protected <%= field.name %>: <%= field.type %>;
+    <%_ }); -%>
+
+  public constructor(
+    <%_ entity.api.service.fields.forEach((field) => { -%>
+    <%= field.name %>: <%= field.type %>,
+    <%_ }); -%>
+  ) {
+    <%_ entity.api.service.fields.forEach((field) => { -%>
+    this.<%= field.name %> = <%= field.name %>;
+    <%_ }); -%>
+  }
+  <%_ } -%>
+  <%_ if (hasGetMany()) { -%>
+
+  public async beforeGetMany(query: <%= getGetManyQueryName() %>): Promise<void> {}
+
+  public async afterGetMany(many: <%= entity.strings.entityClass %>[], query: <%= getGetManyQueryName() %>): Promise<void> {}
+
+  public abstract getMany(query: <%= getGetManyQueryName() %>): Promise<<%= entity.strings.entityClass %>[]>;
+  <%_ } -%>
+  <%_ if (hasGetOne()) { -%>
+
+  public async beforeGetOne(params: <%= getGetOneParamsName() %>): Promise<void> {}
+  
+  public async afterGetOne(one: <%= entity.strings.entityClass %>, params: <%= getGetOneParamsName() %>): Promise<void> {}
+  <%_ } -%>
+  <%_ if (hasInternalGetOne()) { -%>
+
+  public abstract getOne(params: <%= getGetOneParamsName() %>): Promise<<%= entity.strings.entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasCreateOne()) { -%>
+
+  public async beforeCreateOne(body: <%= getCreateOneBodyName() %>): Promise<void> {}
+
+  public async afterCreateOne(createdOne: <%= entity.strings.entityClass %>, body: <%= getCreateOneBodyName() %>): Promise<void> {}
+
+  public abstract createOne(body: <%= getCreateOneBodyName() %>): Promise<<%= entity.strings.entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasUpdateOne()) { -%>
+
+  public async beforeUpdateOne(one: <%= entity.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+
+  public async afterUpdateOne(updatedOne: <%= entity.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<void> {}
+
+  public abstract updateOne(one: <%= entity.strings.entityClass %>, body: <%= getUpdateOneBodyName() %>): Promise<<%= entity.strings.entityClass %>>;
+  <%_ } -%>
+  <%_ if (hasDeleteOne()) { -%>
+
+  public async beforeDeleteOne(one: <%= entity.strings.entityClass %>): Promise<void> {}
+
+  public async afterDeleteOne(deletedOne: <%= entity.strings.entityClass %>): Promise<void> {}
+
+  public abstract deleteOne(one: <%= entity.strings.entityClass %>): Promise<<%= entity.strings.entityClass %>>;
+  <%_ } -%>
+}
+<% } -%>

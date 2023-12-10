@@ -1,4 +1,4 @@
-entity: File
+name: File
 fields:
   - id: 1
     name: id

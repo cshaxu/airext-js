@@ -1,4 +1,4 @@
-entity: File
+name: File
 model: PrismaFile
 fields:
   - id: 2

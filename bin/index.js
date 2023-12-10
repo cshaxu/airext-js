@@ -19,7 +19,9 @@ function askQuestion(question) {
  *  @property {?string} airentPackage
  *  @property {string} schemaPath
  *  @property {string} outputPath
+ *  @property {?string} extensionSchemaPath
  *  @property {?string} [prismaImport]
+ *  @property {?string[]} [augmentors]
  *  @property {?string[]} [prologues]
  *  @property {?Template[]} [templates]
  */
@@ -41,13 +43,12 @@ async function getShouldEnable(name, isEnabled) {
   return ["yes", "y", ""].includes(shouldEnable.toLowerCase());
 }
 
-const PRISMA_PROLOGUE_PATH = "node_modules/airext/templates/prisma.js";
-const API_PROLOGUE_PATH = "node_modules/airext/templates/api.js";
-const SERVICE_TEMPLATE_PATH =
-  "node_modules/airext/templates/service-template.ts.ejs";
-const API_TEMPLATE_PATH = "node_modules/airext/templates/api-template.ts.ejs";
-const AXIOS_TEMPLATE_PATH =
-  "node_modules/airext/templates/axios-template.ts.ejs";
+const AIREXT_RESOURCES_PATH = "node_modules/airext/resources";
+const PRISMA_PROLOGUE_PATH = `${AIREXT_RESOURCES_PATH}/prisma-prologue.js`;
+const API_PROLOGUE_PATH = `${AIREXT_RESOURCES_PATH}/api-prologue.js`;
+const SERVICE_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/service-template.ts.ejs`;
+const API_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-template.ts.ejs`;
+const AXIOS_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/axios-template.ts.ejs`;
 
 async function main() {
   try {
@@ -58,11 +59,12 @@ async function main() {
 
     const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
     const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
-    const prismaImport = shouldEnablePrisma
-      ? await askQuestion(
-          "Statement to import 'prisma' (e.g. \"import prisma from '@/lib/prisma';\" or leave empty): "
-        )
-      : "";
+    const prismaImport =
+      shouldEnablePrisma && !config.prismaImport?.length
+        ? await askQuestion(
+            "Statement to import 'prisma' (e.g. \"import prisma from '@/lib/prisma';\"): "
+          )
+        : "";
 
     const isApiServiceEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
     const shouldEnableApiService = await getShouldEnable(
@@ -76,6 +78,12 @@ async function main() {
       "Axios Api Client",
       isApiClientEnabled
     );
+    const axiosImport =
+      shouldEnablePrisma && !config.axiosImport?.length
+        ? await askQuestion(
+            "Statement to import 'axios' (e.g. \"import axios from 'axios';\"): "
+          )
+        : "";
     const apiBasePath = shouldEnableApiClient
       ? await askQuestion('Base path for backend api (e.g. "/api/restful"): ')
       : "";
@@ -92,6 +100,8 @@ async function main() {
       if (prismaImport.length) {
         config.prismaImport = prismaImport;
       }
+      config.extensionSchemaPath = config.schemaPath;
+      config.schemaPath = "node_modules/.airent/schemas";
       config.prologues = config.prologues ?? [];
       config.prologues.push(PRISMA_PROLOGUE_PATH);
     }
@@ -126,6 +136,9 @@ async function main() {
     }
 
     if (shouldEnableApiClient) {
+      if (axiosImport.length) {
+        config.axiosImport = axiosImport;
+      }
       config.templates = config.templates ?? [];
       const isApiClientTepmlateAdded = config.templates.find(
         (t) => t.name === AXIOS_TEMPLATE_PATH

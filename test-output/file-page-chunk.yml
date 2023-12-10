@@ -1,4 +1,4 @@
-entity: FilePageChunk
+name: FilePageChunk
 model: PrismaFilePageChunk
 types:
   - name: PrismaFilePageChunk

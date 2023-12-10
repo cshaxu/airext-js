@@ -34,7 +34,7 @@
   "files": [
     "bin",
     "lib",
-    "templates"
+    "resources"
   ],
   "dependencies": {
     "@dbml/core": "^3.0.0",
