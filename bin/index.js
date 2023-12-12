@@ -10,8 +10,18 @@ const rl = readline.createInterface({
 });
 
 // Function to ask a question and store the answer in the config object
-function askQuestion(question) {
-  return new Promise((resolve) => rl.question(question, resolve));
+function askQuestion(question, defaultAnswer) {
+  return new Promise((resolve) =>
+    rl.question(`${question} (${defaultAnswer}): `, resolve)
+  ).then((a) => (a?.length ? a : defaultAnswer));
+}
+
+async function getShouldEnable(name, isEnabled) {
+  if (isEnabled) {
+    return false;
+  }
+  const shouldEnable = await askQuestion(`Enable "${name}"`, "yes");
+  return shouldEnable === "yes";
 }
 
 /** @typedef {Object} Config
@@ -26,139 +36,127 @@ function askQuestion(question) {
  *  @property {?Template[]} [templates]
  */
 
-const PROJECT_PATH = process.cwd();
+const CONFIG_FILE_PATH = path.join(process.cwd(), "airent.config.json");
 
-const CONFIG_FILE_PATH = path.join(PROJECT_PATH, "airent.config.json");
+const AIREXT_RESOURCES_PATH = "node_modules/airext/resources";
+
+const PRISMA_AUGMENTOR_PATH = `${AIREXT_RESOURCES_PATH}/prisma-augmentor.js`;
+
+const API_AUGMENTOR_PATH = `${AIREXT_RESOURCES_PATH}/api-augmentor.js`;
+const API_SERVER_ACTION_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-server-action-template.ts.ejs`;
+const API_SERVER_SERVICE_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-server-service-template.ts.ejs`;
+const API_CLIENT_RESTFUL_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-client-restful-template.ts.ejs`;
 
 async function loadConfig() {
   const configContent = await fs.promises.readFile(CONFIG_FILE_PATH, "utf8");
-  return JSON.parse(configContent);
+  const config = JSON.parse(configContent);
+  const augmentors = config.augmentors ?? [];
+  const templates = config.templates ?? [];
+  return { ...config, augmentors, templates };
 }
 
-async function getShouldEnable(name, isEnabled) {
-  if (isEnabled) {
-    return false;
+async function configurePrisma(config) {
+  const { augmentors } = config;
+  const isPrismaAugmentorEnabled = augmentors.includes(PRISMA_AUGMENTOR_PATH);
+  const shouldEnablePrismaAugmentor = await getShouldEnable(
+    "Prisma",
+    isPrismaAugmentorEnabled
+  );
+  if (shouldEnablePrismaAugmentor) {
+    const defaultPrismaImport = "import prisma from '@/lib/prisma';";
+    config.prismaImport = await askQuestion(
+      'Statement to import "prisma"',
+      config.prismaImport ?? defaultPrismaImport
+    );
+    augmentors.push(PRISMA_AUGMENTOR_PATH);
+  } else if (!isPrismaAugmentorEnabled) {
+    return;
   }
-  const shouldEnable = await askQuestion(`Enable ${name} (yes): `);
-  return ["yes", "y", ""].includes(shouldEnable.toLowerCase());
+
+  const isPrismaYamlGeneratorEnabled = !!config.extensionSchemaPath?.length;
+  const shouldEnablePrismaYamlGenerator = await getShouldEnable(
+    "Prisma Dbml-based YAML Generator",
+    isPrismaYamlGeneratorEnabled
+  );
+  if (shouldEnablePrismaYamlGenerator) {
+    config.extensionSchemaPath = config.schemaPath;
+    config.schemaPath = "node_modules/.airent/schemas";
+    console.log(
+      '[AIREXT/INFO] Please run "npx airext-prisma" before "npx airent" in the future.'
+    );
+  }
 }
 
-const AIREXT_RESOURCES_PATH = "node_modules/airext/resources";
-const PRISMA_PROLOGUE_PATH = `${AIREXT_RESOURCES_PATH}/prisma-prologue.js`;
-const API_PROLOGUE_PATH = `${AIREXT_RESOURCES_PATH}/api-prologue.js`;
-const SERVICE_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/service-template.ts.ejs`;
-const API_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-template.ts.ejs`;
-const AXIOS_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/axios-template.ts.ejs`;
+async function configureApi(config) {
+  const { augmentors, templates } = config;
+  const isApiEnabled = augmentors.includes(API_AUGMENTOR_PATH);
+  const shouldEnableApi = await getShouldEnable("Api Suite", isApiEnabled);
+
+  if (shouldEnableApi) {
+    augmentors.push(API_AUGMENTOR_PATH);
+    const isApiServerActionEnabled =
+      templates.find((t) => t.name === API_SERVER_ACTION_TEMPLATE_PATH) !==
+      undefined;
+    if (!isApiServerActionEnabled) {
+      templates.push({
+        name: API_SERVER_ACTION_TEMPLATE_PATH,
+        suffix: "action",
+        skippable: false,
+      });
+    }
+    const isApiServerServiceEnabled =
+      templates.find((t) => t.name === API_SERVER_SERVICE_TEMPLATE_PATH) !==
+      undefined;
+    if (!isApiServerServiceEnabled) {
+      templates.push({
+        name: API_SERVER_SERVICE_TEMPLATE_PATH,
+        suffix: "service",
+        skippable: false,
+      });
+    }
+  } else if (!isApiEnabled) {
+    return;
+  }
+
+  const isApiClientRestfulEnabled =
+    templates.find((t) => t.name === API_CLIENT_RESTFUL_TEMPLATE_PATH) !==
+    undefined;
+  const shouldEnableApiClientRestful = await getShouldEnable(
+    "Restful Api Client",
+    isApiClientRestfulEnabled
+  );
+  if (shouldEnableApiClientRestful) {
+    const defaultAxiosImport = "import axios from 'axios';";
+    config.axiosImport = await askQuestion(
+      'Statement to import "axios"',
+      config.axiosImport ?? defaultAxiosImport
+    );
+    const defaultApiBasePath = "/api/restful";
+    config.apiBasePath = await askQuestion(
+      "Enter Backend Api Base Path",
+      config.apiBasePath ?? defaultApiBasePath
+    );
+    templates.push({
+      name: API_CLIENT_RESTFUL_TEMPLATE_PATH,
+      suffix: "restful",
+      skippable: false,
+    });
+  }
+}
 
 async function main() {
   try {
     if (!fs.existsSync(CONFIG_FILE_PATH)) {
-      throw new Error("[AIREXT/ERROR] airent.config.json is not found");
+      throw new Error('[AIREXT/ERROR] "airent.config.json" not found');
     }
     const config = await loadConfig();
 
-    const isPrismaEnabled = config.prologues?.includes(PRISMA_PROLOGUE_PATH);
-    const shouldEnablePrisma = await getShouldEnable("Prisma", isPrismaEnabled);
-    const prismaImport =
-      shouldEnablePrisma && !config.prismaImport?.length
-        ? await askQuestion(
-            "Statement to import 'prisma' (e.g. \"import prisma from '@/lib/prisma';\"): "
-          )
-        : "";
-
-    const isApiServiceEnabled = config.prologues?.includes(API_PROLOGUE_PATH);
-    const shouldEnableApiService = await getShouldEnable(
-      "Backend Api Service",
-      isApiServiceEnabled
-    );
-
-    const existingTemplates = (config.templates ?? []).map((t) => t.name);
-    const isApiClientEnabled = existingTemplates.includes(AXIOS_TEMPLATE_PATH);
-    const shouldEnableApiClient = await getShouldEnable(
-      "Axios Api Client",
-      isApiClientEnabled
-    );
-    const axiosImport =
-      shouldEnablePrisma && !config.axiosImport?.length
-        ? await askQuestion(
-            "Statement to import 'axios' (e.g. \"import axios from 'axios';\"): "
-          )
-        : "";
-    const apiBasePath = shouldEnableApiClient
-      ? await askQuestion('Base path for backend api (e.g. "/api/restful"): ')
-      : "";
-
-    if (
-      !shouldEnablePrisma &&
-      !shouldEnableApiService &&
-      !shouldEnableApiClient
-    ) {
-      return;
-    }
-
-    if (shouldEnablePrisma) {
-      if (prismaImport.length) {
-        config.prismaImport = prismaImport;
-      }
-      config.extensionSchemaPath = config.schemaPath;
-      config.schemaPath = "node_modules/.airent/schemas";
-      config.prologues = config.prologues ?? [];
-      config.prologues.push(PRISMA_PROLOGUE_PATH);
-    }
-
-    if (shouldEnableApiService) {
-      config.prologues = config.prologues ?? [];
-      config.prologues.push(API_PROLOGUE_PATH);
-
-      config.templates = config.templates ?? [];
-
-      const isApiServiceTepmlateAdded = config.templates.find(
-        (t) => t.name === SERVICE_TEMPLATE_PATH
-      );
-      if (!isApiServiceTepmlateAdded) {
-        config.templates.push({
-          name: SERVICE_TEMPLATE_PATH,
-          suffix: "service",
-          skippable: false,
-        });
-      }
-
-      const isApiTepmlateAdded = config.templates.find(
-        (t) => t.name === API_TEMPLATE_PATH
-      );
-      if (!isApiTepmlateAdded) {
-        config.templates.push({
-          name: API_TEMPLATE_PATH,
-          suffix: "api",
-          skippable: false,
-        });
-      }
-    }
-
-    if (shouldEnableApiClient) {
-      if (axiosImport.length) {
-        config.axiosImport = axiosImport;
-      }
-      config.templates = config.templates ?? [];
-      const isApiClientTepmlateAdded = config.templates.find(
-        (t) => t.name === AXIOS_TEMPLATE_PATH
-      );
-      if (!isApiClientTepmlateAdded) {
-        config.templates.push({
-          name: AXIOS_TEMPLATE_PATH,
-          suffix: "axios",
-          skippable: false,
-        });
-      }
-      const isApiBasePathAdded = !!config.apiBasePath?.length;
-      if (!isApiBasePathAdded) {
-        config.apiBasePath = apiBasePath;
-      }
-    }
+    await configurePrisma(config);
+    await configureApi(config);
 
     const content = JSON.stringify(config, null, 2) + "\n";
     await fs.promises.writeFile(CONFIG_FILE_PATH, content);
-    console.log(`[AIRENT/INFO] Configuration located at '${CONFIG_FILE_PATH}'`);
+    console.log(`[AIREXT/INFO] Airext installed.`);
   } finally {
     rl.close();
   }

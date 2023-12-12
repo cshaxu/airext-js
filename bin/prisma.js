@@ -34,7 +34,7 @@ async function sequential(functions) {
 
 async function loadConfig(isVerbose) {
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Loading config ${CONFIG_FILE_PATH} ...`);
+    console.log(`[AIREXT-PRISMA/INFO] Loading config ${CONFIG_FILE_PATH} ...`);
   }
   const configContent = await fs.promises.readFile(CONFIG_FILE_PATH, "utf8");
   const config = JSON.parse(configContent);
@@ -64,7 +64,7 @@ async function getSchemaFilePaths(schemaPath) {
 
 async function loadSchema(schemaFilePath, isVerbose) {
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Loading schema ${schemaFilePath} ...`);
+    console.log(`[AIREXT-PRISMA/INFO] Loading schema ${schemaFilePath} ...`);
   }
   const schemaContent = await fs.promises.readFile(schemaFilePath, "utf8");
   return yaml.load(schemaContent);
@@ -80,7 +80,7 @@ async function loadSchemas(schemaPath, isVerbose) {
 
 async function loadDbml(dbmlFilePath, isVerbose) {
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Loading dbml ${dbmlFilePath} ...`);
+    console.log(`[AIREXT-PRISMA/INFO] Loading dbml ${dbmlFilePath} ...`);
   }
   const content = fs.readFileSync(dbmlFilePath, "utf-8");
   const imported = importer.import(content, "dbml");
@@ -191,7 +191,7 @@ async function loadTableSchemas(isVerbose) {
 
 function merge(inputSchema, tableSchema, isVerbose) {
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Merging schema ${tableSchema.name} ...`);
+    console.log(`[AIREXT-PRISMA/INFO] Merging schema ${tableSchema.name} ...`);
   }
   const { name, model } = tableSchema;
 
@@ -225,7 +225,7 @@ function merge(inputSchema, tableSchema, isVerbose) {
 
 function reconcile(inputSchemas, tableSchemas, isVerbose) {
   if (isVerbose) {
-    console.log("[AIREXT/INFO] Reconciling schemas ...");
+    console.log("[AIREXT-PRISMA/INFO] Reconciling schemas ...");
   }
   const schemaNames = Array.from(
     new Set([
@@ -248,7 +248,7 @@ async function generateOne(entity, outputPath, isVerbose) {
   const fileName = `${toKababCase(entity.name)}.yml`;
   const outputFilePath = path.join(outputPath, fileName);
   if (isVerbose) {
-    console.log(`[AIREXT/INFO] Generating YAML ${outputFilePath} ...`);
+    console.log(`[AIREXT-PRISMA/INFO] Generating YAML ${outputFilePath} ...`);
   }
   const content = yaml.dump(entity);
   await fs.promises.writeFile(outputFilePath, content, "utf-8");
@@ -274,7 +274,7 @@ async function generate(isVerbose) {
 async function main(argv) {
   const isVerbose = argv.includes("--verbose") || argv.includes("-v");
   await generate(isVerbose);
-  console.log("[AIREXT/INFO] Task completed.");
+  console.log("[AIREXT-PRISMA/INFO] Task completed.");
 }
 
 main(process.argv.slice(2)).catch((error) => console.error(error));
