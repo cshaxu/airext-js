@@ -238,34 +238,42 @@ function buildSelfLoaderLines(entity) /* Code */ {
 }
 
 function buildLoadConfigSetterLines(field) /* Code[] */ {
+  const auxiliaryFields = getAuxiliaryFields(field._type._entity);
+  const auxiliaryFieldInitializeLines = auxiliaryFields.length
+    ? [
+        "targets.forEach((one) => {",
+        ...auxiliaryFields.map((af) => `  one.${af.name} = this.${af.name};`),
+        "});",
+      ]
+    : [];
   const mapper = field.code.loadConfig.targetMapper;
   const setter = field.code.loadConfig.sourceSetter;
   const mapperLine = `const map = ${mapper};`;
   if (!utils.isEntityTypeField(field)) {
     return [
+      ...auxiliaryFieldInitializeLines,
       mapperLine,
       `sources.forEach((one) => (one.${field.name} = ${setter}));`,
     ];
   }
   const { entityClass } = field._parent.strings;
-  const auxiliaryFieldLines = getAuxiliaryFields(field._type._entity).map(
-    (af) => [
-      `  if (one.${af.name} === undefined) {`,
-      `    throw new Error('${entityClass}.${field.name}: ${af.name} is undefined');`,
-      `  } else {`,
-      utils.isArrayField(field)
-        ? `    one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
-        : utils.isNullableField(field)
-        ? `    if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; }`
-        : `    one.${field.name}.${af.name} = one.${af.name};`,
-      `  }`,
-    ]
-  );
+  const auxiliaryFieldUpdateLines = auxiliaryFields.map((af) => [
+    `  if (one.${af.name} === undefined) {`,
+    `    throw new Error('${entityClass}.${field.name}: ${af.name} is undefined');`,
+    `  } else {`,
+    utils.isArrayField(field)
+      ? `    one.${field.name}.forEach((e) => (e.${af.name} = one.${af.name}));`
+      : utils.isNullableField(field)
+      ? `    if (one.${field.name} !== null) { one.${field.name}.${af.name} = one.${af.name}; }`
+      : `    one.${field.name}.${af.name} = one.${af.name};`,
+    `  }`,
+  ]);
   return [
+    ...auxiliaryFieldInitializeLines,
     mapperLine,
     `sources.forEach((one) => {`,
     `  one.${field.name} = ${setter};`,
-    ...auxiliaryFieldLines.flat(),
+    ...auxiliaryFieldUpdateLines.flat(),
     `});`,
   ];
 }
