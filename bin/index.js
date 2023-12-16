@@ -100,7 +100,7 @@ async function configureApi(config) {
     if (!isApiServerActionEnabled) {
       templates.push({
         name: API_SERVER_ACTION_TEMPLATE_PATH,
-        suffix: "action",
+        outputPath: "{entityPath}/generated/{kababEntityName}-action.ts",
         skippable: false,
       });
     }
@@ -110,7 +110,7 @@ async function configureApi(config) {
     if (!isApiServerServiceEnabled) {
       templates.push({
         name: API_SERVER_SERVICE_TEMPLATE_PATH,
-        suffix: "service",
+        outputPath: "{entityPath}/generated/{kababEntityName}-service.ts",
         skippable: false,
       });
     }
@@ -138,7 +138,7 @@ async function configureApi(config) {
     );
     templates.push({
       name: API_CLIENT_RESTFUL_TEMPLATE_PATH,
-      suffix: "restful",
+      outputPath: "{entityPath}/generated/{kababEntityName}-restful.ts",
       skippable: false,
     });
   }

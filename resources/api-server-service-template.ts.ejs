@@ -7,7 +7,7 @@ import {
   <%_ entity.types.filter(utils.isCustomType).forEach((type) => { -%>
   <%= type.name %>,
   <%_ }); -%>
-  <%_ if (entity.api.booleans.hasGetOne || entity.api.booleans.hasUpdateOne || entity.api.booleans.hasDeleteOne) { -%>
+  <%_ if (entity.api.booleans.hasGetOneRequest) { -%>
   <%= entity.api.strings.getOneParams %>,
   <%_ } -%>
 } from './<%= entity.strings.typePackage %>';
@@ -28,7 +28,7 @@ import {
   <%_ if (entity.deprecated) { -%>
 /** @deprecated */
   <%_ } -%>
-export abstract class <%= `${entity.api.strings.service}Base` %> {
+export abstract class <%= `${entity.api.strings.serviceClass}Base` %> {
   <%_ if (entity.api.service.fields?.length) { -%>
     <%_ entity.api.service.fields.forEach((field) => { -%>
   protected <%= field.name %>: <%= field.type %>;
@@ -55,7 +55,7 @@ export abstract class <%= `${entity.api.strings.service}Base` %> {
   <%_ if (entity.api.booleans.hasGetOne) { -%>
 
   public async beforeGetOne(params: <%= entity.api.strings.getOneParams %>): Promise<void> {}
-  
+
   public async afterGetOne(one: <%= entity.strings.entityClass %>, params: <%= entity.api.strings.getOneParams %>): Promise<void> {}
   <%_ } -%>
   <%_ if (entity.api.booleans.hasGetOneRequest) { -%>

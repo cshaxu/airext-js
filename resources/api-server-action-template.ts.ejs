@@ -2,7 +2,7 @@
 import { getMax, getMin } from 'airext';
 import {
   <%= entity.strings.fieldRequestClass %>,
-  <%= entity.strings.responseClass %>,
+  <%=entity.strings.responseClass %>,
   <%= entity.api.strings.manyResponse %>,
   <%= entity.api.strings.oneResponse %>,
   <%_ if (entity.api && entity.api.booleans.hasGetOneRequest) { -%>
@@ -17,7 +17,7 @@ import { <%= type.strings.externalClass %> } from '<%= type.strings.externalPack
 import { <%= type.name %> } from './<%= entity.strings.typePackage %>';
   <%_ }); -%>
   <%_ if (entity.api) { -%>
-import { <%= entity.api.strings.service %> } from '<%= entity.api.service.import %>';
+import { <%= entity.api.strings.serviceClass %> } from '<%= entity.api.service.import %>';
     <%_ if (entity.api.booleans.hasGetMany || entity.api.booleans.hasCreateOne || entity.api.booleans.hasUpdateOne) { -%>
 import {
       <%_ if (entity.api.booleans.hasGetMany) { -%>
@@ -53,8 +53,7 @@ export async function <%= `build${entity.api.strings.manyResponse}` %>(
   <%_ entity.fields.filter((f) => f.strings.minVar && f.strings.maxVar).forEach((field) => { -%>
     <%= field.strings.minVar %>,
     <%= field.strings.maxVar %>,
-  <%_ }); -%>
-  };
+  <%_ }); -%> };
   return { cursor, <%= entity.api.strings.manyEntsVar %> };
 }
 
@@ -85,7 +84,7 @@ export async function <%= entity.api.strings.getManyAction %>(
       <%_ }); -%>
   fieldRequest?: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.manyResponse %>> {
-  const service = new <%= entity.api.strings.service %>(
+  const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
       <%_ }); -%>
@@ -108,7 +107,7 @@ export async function <%= entity.api.strings.getOneAction %>(
       <%_ }); -%>
   fieldRequest?: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
-  const service = new <%= entity.api.strings.service %>(
+  const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
       <%_ }); -%>
@@ -120,7 +119,7 @@ export async function <%= entity.api.strings.getOneAction %>(
 }
     <%_ } -%>
     <%_ if (entity.api.booleans.hasCreateOne) { -%>
-
+      
       <%_ if (entity.deprecated) { -%>
 /** @deprecated */
       <%_ } -%>
@@ -131,7 +130,7 @@ export async function <%= entity.api.strings.createOneAction %>(
       <%_ }); -%>
   fieldRequest?: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
-  const service = new <%= entity.api.strings.service %>(
+  const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
       <%_ }); -%>
@@ -155,11 +154,10 @@ export async function <%= entity.api.strings.updateOneAction %>(
       <%_ }); -%>
   fieldRequest?: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
-  const service = new <%= entity.api.strings.service %>(
+  const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
-    <%= field.name %>,
-      <%_ }); -%>
-  );
+  <%= field.name %>,
+      <%_ }); -%> );
   const one = await service.getOne(params);
   await service.beforeUpdateOne(one, body);
   const updatedOne = await service.updateOne(one, body);
@@ -179,7 +177,7 @@ export async function <%= entity.api.strings.deleteOneAction %>(
       <%_ }); -%>
   fieldRequest?: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
-  const service = new <%= entity.api.strings.service %>(
+  const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
     <%= field.name %>,
       <%_ }); -%>
