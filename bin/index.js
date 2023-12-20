@@ -45,7 +45,6 @@ const PRISMA_AUGMENTOR_PATH = `${AIREXT_RESOURCES_PATH}/prisma-augmentor.js`;
 const API_AUGMENTOR_PATH = `${AIREXT_RESOURCES_PATH}/api-augmentor.js`;
 const API_SERVER_ACTION_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-server-action-template.ts.ejs`;
 const API_SERVER_SERVICE_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-server-service-template.ts.ejs`;
-const API_CLIENT_RESTFUL_TEMPLATE_PATH = `${AIREXT_RESOURCES_PATH}/api-client-restful-template.ts.ejs`;
 
 async function loadConfig() {
   const configContent = await fs.promises.readFile(CONFIG_FILE_PATH, "utf8");
@@ -116,31 +115,6 @@ async function configureApi(config) {
     }
   } else if (!isApiEnabled) {
     return;
-  }
-
-  const isApiClientRestfulEnabled =
-    templates.find((t) => t.name === API_CLIENT_RESTFUL_TEMPLATE_PATH) !==
-    undefined;
-  const shouldEnableApiClientRestful = await getShouldEnable(
-    "Restful Api Client",
-    isApiClientRestfulEnabled
-  );
-  if (shouldEnableApiClientRestful) {
-    const defaultAxiosImport = "import axios from 'axios';";
-    config.axiosImport = await askQuestion(
-      'Statement to import "axios"',
-      config.axiosImport ?? defaultAxiosImport
-    );
-    const defaultApiBasePath = "/api/restful";
-    config.apiBasePath = await askQuestion(
-      "Enter Backend Api Base Path",
-      config.apiBasePath ?? defaultApiBasePath
-    );
-    templates.push({
-      name: API_CLIENT_RESTFUL_TEMPLATE_PATH,
-      outputPath: "{entityPath}/generated/{kababEntityName}-restful.ts",
-      skippable: false,
-    });
   }
 }
 

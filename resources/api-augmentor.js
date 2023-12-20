@@ -3,7 +3,7 @@ const utils = require("../../airent/resources/utils.js");
 /**
  * SCHEMA FLAGS
  * - internal: false | undefined, top-level flag, false to skip generating ManyResponse/OneResponse
- * - api: object | undefined, top-level field, defined to generate api entrypoints, service methods and axios sdks
+ * - api: object | undefined, top-level field, defined to generate api actions and services
  */
 
 function isCursorField(field) {
@@ -23,7 +23,6 @@ function hasApiMethod(entity, methodName) {
 function addStrings(entity, isVerbose) {
   const pluralEntName = utils.toTitleCase(utils.pluralize(entity.name));
   const singularEntName = utils.toTitleCase(entity.name);
-  entity.strings.restfulAxios = `${singularEntName}RestfulAxios`;
   if (!entity.api) {
     return;
   } else if (isVerbose) {
