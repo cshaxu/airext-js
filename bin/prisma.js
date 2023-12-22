@@ -197,11 +197,16 @@ function merge(inputSchema, tableSchema, isVerbose) {
 
   const inputFields = inputSchema.fields ?? [];
   const inputFieldNames = new Set(inputFields.map((f) => f.name));
-  const tableFields = tableSchema.fields.filter(
-    (f) =>
-      !inputFieldNames.has(f.name) &&
-      inputSchema.skipPrismaFields?.includes(f.name) !== true
-  );
+  const internalPrismaFields = inputSchema.internalPrismaFields ?? [];
+  const tableFields = tableSchema.fields
+    .map((f) =>
+      internalPrismaFields.includes(f.name) ? { ...f, internal: true } : f
+    )
+    .filter(
+      (f) =>
+        !inputFieldNames.has(f.name) &&
+        inputSchema.skipPrismaFields?.includes(f.name) !== true
+    );
   const fields = [...tableFields, ...inputFields];
 
   const inputTypes = inputSchema.types ?? [];

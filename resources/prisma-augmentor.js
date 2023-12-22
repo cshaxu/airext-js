@@ -198,44 +198,44 @@ function buildModelsLoader(entityName) /* Code */ {
   return `await batchLoad(prisma.${prismaModelName}.findMany, keys)`;
 }
 
-function buildSelfLoaderLines(entity) /* Code */ {
-  const beforeLine = `if (keys.length === 0) { return []; }`;
-  const afterLine = `return (this as any).fromArray(loadedModels);`;
-  const selfModelsLoader =
-    entity.isPrisma === false
-      ? "[/* Please add `skipSelfLoader: true` in entity yaml */]"
-      : buildModelsLoader(utils.toTitleCase(entity.name));
-
-  const auxiliaryFields = getAuxiliaryFields(entity);
-  if (auxiliaryFields.length === 0) {
-    const loadedModelsLine = `const loadedModels = ${selfModelsLoader};`;
-    return [beforeLine, loadedModelsLine, afterLine];
-  }
-
-  const { entityClass } = entity.strings;
-  const auxiliaryFieldLines = auxiliaryFields.map((af) => [
-    `const { ${af.name} } = keys[0];`,
-    `if (${af.name} === undefined) {`,
-    `  throw new Error('${entityClass}: ${af.name} is undefined');`,
-    `}`,
-  ]);
-  const auxiliaryFieldNameList = auxiliaryFields
-    .map((af) => af.name)
-    .join(", ");
-  const keysOmitterLines = [
-    `keys = keys.map(({ ${auxiliaryFieldNameList}, ...rest }) => rest);`,
-  ];
-  const prismaModelsLine = `const prismaModels = ${selfModelsLoader};`;
-  const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFieldNameList} }));`;
-  return [
-    beforeLine,
-    ...auxiliaryFieldLines.flat(),
-    ...keysOmitterLines.flat(),
-    prismaModelsLine,
-    loadedModelsLine,
-    afterLine,
-  ];
-}
+// function buildSelfLoaderLines(entity) /* Code */ {
+//   const beforeLine = `if (keys.length === 0) { return []; }`;
+//   const afterLine = `return (this as any).fromArray(loadedModels);`;
+//   const selfModelsLoader =
+//     entity.isPrisma === false
+//       ? "[/* Please add `skipSelfLoader: true` in entity yaml */]"
+//       : buildModelsLoader(utils.toTitleCase(entity.name));
+//
+//   const auxiliaryFields = getAuxiliaryFields(entity);
+//   if (auxiliaryFields.length === 0) {
+//     const loadedModelsLine = `const loadedModels = ${selfModelsLoader};`;
+//     return [beforeLine, loadedModelsLine, afterLine];
+//   }
+//
+//   const { entityClass } = entity.strings;
+//   const auxiliaryFieldLines = auxiliaryFields.map((af) => [
+//     `const { ${af.name} } = keys[0];`,
+//     `if (${af.name} === undefined) {`,
+//     `  throw new Error('${entityClass}: ${af.name} is undefined');`,
+//     `}`,
+//   ]);
+//   const auxiliaryFieldNameList = auxiliaryFields
+//     .map((af) => af.name)
+//     .join(", ");
+//   const keysOmitterLines = [
+//     `keys = keys.map(({ ${auxiliaryFieldNameList}, ...rest }) => rest);`,
+//   ];
+//   const prismaModelsLine = `const prismaModels = ${selfModelsLoader};`;
+//   const loadedModelsLine = `const loadedModels = prismaModels.map((pm) => ({ ...pm, ${auxiliaryFieldNameList} }));`;
+//   return [
+//     beforeLine,
+//     ...auxiliaryFieldLines.flat(),
+//     ...keysOmitterLines.flat(),
+//     prismaModelsLine,
+//     loadedModelsLine,
+//     afterLine,
+//   ];
+// }
 
 function buildLoadConfigSetterLines(field) /* Code[] */ {
   const auxiliaryFields = getAuxiliaryFields(field._type._entity);
@@ -286,7 +286,8 @@ function augmentOne(entity, config, isVerbose) /* void */ {
   const prismaInsideBase = buildInsideBase(entity);
   entity.code.beforeBase.push(...prismaBeforeBase);
   entity.code.insideBase.push(...prismaInsideBase);
-  entity.code.selfLoaderLines = buildSelfLoaderLines(entity);
+  entity.skipSelfLoader = true;
+  // entity.code.selfLoaderLines = buildSelfLoaderLines(entity);
   entity.fields.filter(utils.isAssociationField).forEach((field) => {
     const { loadConfig } = field.code;
     const isLoaderGeneratable = buildIsLoaderGeneratable(field);
