@@ -7,14 +7,14 @@ import {
   <%_ entity.types.filter(utils.isCustomType).forEach((type) => { -%>
   <%= type.name %>,
   <%_ }); -%>
-  <%_ if (entity.api.booleans.hasGetOneRequest) { -%>
-  <%= entity.api.strings.getOneParams %>,
-  <%_ } -%>
 } from './<%= entity.strings.typePackage %>';
   <%_ if (entity.api.booleans.hasGetMany || entity.api.booleans.hasCreateOne || entity.api.booleans.hasUpdateOne) { -%>
 import {
     <%_ if (entity.api.booleans.hasGetMany) { -%>
   <%= entity.api.strings.getManyQuery %>,
+    <%_ } -%>
+    <%_ if (entity.api.booleans.hasGetOneRequest) { -%>
+  <%= entity.api.strings.getOneParams %>,
     <%_ } -%>
     <%_ if (entity.api.booleans.hasCreateOne) { -%>
   <%= entity.api.strings.createOneBody %>,

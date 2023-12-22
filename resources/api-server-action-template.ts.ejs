@@ -5,9 +5,6 @@ import {
   <%=entity.strings.responseClass %>,
   <%= entity.api.strings.manyResponse %>,
   <%= entity.api.strings.oneResponse %>,
-  <%_ if (entity.api && entity.api.booleans.hasGetOneRequest) { -%>
-  <%= entity.api.strings.getOneParams %>,
-  <%_ } -%>
 } from './<%= entity.strings.typePackage %>';
 import { <%= entity.strings.entityClass %> } from '../<%= entity.strings.entityPackage %>';
   <%_ entity.types.filter(utils.isImportType).forEach((type) => { -%>
@@ -22,6 +19,9 @@ import { <%= entity.api.strings.serviceClass %> } from '<%= entity.api.service.i
 import {
       <%_ if (entity.api.booleans.hasGetMany) { -%>
   <%= entity.api.strings.getManyQuery %>,
+      <%_ } -%>
+      <%_ if (entity.api.booleans.hasGetOneRequest) { -%>
+      <%= entity.api.strings.getOneParams %>,
       <%_ } -%>
       <%_ if (entity.api.booleans.hasCreateOne) { -%>
   <%= entity.api.strings.createOneBody %>,

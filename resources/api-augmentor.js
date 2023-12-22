@@ -120,21 +120,6 @@ function buildAfterType(entity) /* Code[] */ {
     `  ${entity.api.strings.oneEntVar}: ${entity.strings.responseClass};`
   );
   lines.push("};");
-  if (entity.api && entity.api.booleans.hasGetOneRequest) {
-    lines.push("");
-    if (entity.deprecated) {
-      lines.push("/** @deprecated */");
-    }
-    lines.push(`export type ${entity.api.strings.getOneParams} = {`);
-    entity.api.keys.forEach((key) => {
-      const field = utils.queryField(key, entity);
-      if (field.deprecated) {
-        lines.push("  /** @deprecated */");
-      }
-      lines.push(`  ${key}: ${field.type};`);
-    });
-    lines.push("};");
-  }
   return lines;
 }
 
