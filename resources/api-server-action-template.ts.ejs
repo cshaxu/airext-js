@@ -40,7 +40,7 @@ import {
   <%_ } -%>
 export async function <%= `build${entity.api.strings.manyResponse}` %>(
   many: <%= entity.strings.entityClass %>[],
-  fieldRequest?: <%= entity.strings.fieldRequestClass %> | boolean,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.manyResponse %>> {
   const <%= entity.api.strings.manyEntsVar %> = await <%= entity.strings.entityClass %>.presentMany(many, fieldRequest);
   <%_ entity.fields.filter((f) => f.strings.minVar && f.strings.maxVar).forEach((field) => { -%>
@@ -62,7 +62,7 @@ export async function <%= `build${entity.api.strings.manyResponse}` %>(
   <%_ } -%>
 export async function <%= `build${entity.api.strings.oneResponse}` %>(
   one: <%= entity.strings.entityClass %>,
-  fieldRequest?: <%= entity.strings.fieldRequestClass %> | boolean,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
   const <%= entity.api.strings.oneEntVar %> = await one.present(fieldRequest);
   return { <%= entity.api.strings.oneEntVar %> };
@@ -82,7 +82,7 @@ export async function <%= entity.api.strings.getManyAction %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
       <%_ }); -%>
-  fieldRequest?: <%= entity.strings.fieldRequestClass %>,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.manyResponse %>> {
   const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
@@ -105,7 +105,7 @@ export async function <%= entity.api.strings.getOneAction %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
       <%_ }); -%>
-  fieldRequest?: <%= entity.strings.fieldRequestClass %>,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
   const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
@@ -128,7 +128,7 @@ export async function <%= entity.api.strings.createOneAction %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
       <%_ }); -%>
-  fieldRequest?: <%= entity.strings.fieldRequestClass %>,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
   const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
@@ -152,7 +152,7 @@ export async function <%= entity.api.strings.updateOneAction %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
       <%_ }); -%>
-  fieldRequest?: <%= entity.strings.fieldRequestClass %>,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
   const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
@@ -175,7 +175,7 @@ export async function <%= entity.api.strings.deleteOneAction %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
   <%= field.name %>: <%= field.type %>,
       <%_ }); -%>
-  fieldRequest?: <%= entity.strings.fieldRequestClass %>,
+  fieldRequest: <%= entity.strings.fieldRequestClass %>,
 ): Promise<<%= entity.api.strings.oneResponse %>> {
   const service = new <%= entity.api.strings.serviceClass %>(
       <%_ (entity.api.service.fields ?? []).forEach((field) => { -%>
